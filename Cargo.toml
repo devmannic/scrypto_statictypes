@@ -1,0 +1,55 @@
+[package]
+name = "scrypto_statictypes"
+version = "0.1.0"
+rust-version = "1.56"
+authors = ["devmannic <82296715+devmannic@users.noreply.github.com>"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/devmannic/scrypto_statictypes"
+documentation = "https://devmannic.github.io/scrypto_statictypes"
+homepage = "https://github.com/devmannic/scrypto_statictypes"
+description = """
+A library to increase security and productivity when developing Radix blueprints with Scrypto.
+"""
+keywords = ["scrypto", "radix", "types", "security", "bucketof"]
+categories = ["cryptography::cryptocurrencies", "development-tools"]
+edition = "2021"
+include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
+exclude = ["examples/", "misc/", "utils/"]
+
+[package.metadata.docs.rs]
+# To build locally:
+# RUSTDOCFLAGS="--cfg doc_cfg" cargo +nightly doc --all-features --no-deps --open
+all-features = true
+rustdoc-args = ["--cfg", "doc_cfg"]
+
+[package.metadata.playground]
+features = []
+
+[workspace]
+members = ["."]
+default-members = ["."]
+#exclude = ["examples/.*"]
+
+[features]
+# Meta-features:
+default = []
+nightly = [] # enables optimizations or features requiring nightly rust
+# package features
+runtime_typechecks = []
+
+[dependencies]
+sbor = { git = "https://github.com/radixdlt/radixdlt-scrypto" }
+scrypto = { git = "https://github.com/radixdlt/radixdlt-scrypto" }
+
+[dev-dependencies]
+radix-engine = { git = "https://github.com/radixdlt/radixdlt-scrypto" }
+
+[profile.release]
+opt-level = 's'     # Optimize for size.
+lto = true          # Enable Link Time Optimization.
+codegen-units = 1   # Reduce number of codegen units to increase optimizations.
+panic = 'abort'     # Abort on panic.
+
+[lib]
+crate-type = ["cdylib", "lib"]

@@ -1,0 +1,69 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, '0.[0-9]+' ]
+  pull_request:
+    branches: [ main, '0.[0-9]+' ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            toolchain: stable
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            toolchain: 1.56.0 # MSRV (default features)
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            toolchain: 1.56.0 # MSRV (all features)
+          ## no nightly support since upstream deps are broken
+          #- os: ubuntu-latest
+          #  target: x86_64-unknown-linux-gnu
+          #  toolchain: nightly
+          #  variant: minimal_versions
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          target: ${{ matrix.target }}
+          toolchain: ${{ matrix.toolchain }}
+          override: true
+      - run: |
+          ${{ matrix.deps }}
+          rustup target add wasm32-unknown-unknown
+      - name: Maybe minimal versions
+        if: ${{ matrix.variant == 'minimal_versions' }}
+        run: cargo generate-lockfile -Z minimal-versions
+      - name: Test scrypto_statictypes (nightly features, nightly)
+        if: ${{ matrix.toolchain == 'nightly' }}
+        run: |
+          cargo test --release --features=nightly
+      - name: Test scrypto_statictypes stable
+        if: ${{ matrix.toolchain == 'stable' }}
+        run: |
+          cargo test --release
+      - name: Test scrypto_statictypes (all features, stable)
+        if: ${{ matrix.toolchain == 'stable' }}
+        run: |
+          cargo test --release --all-features
+      - name: Test scrypto_statictypes (default features, MSRV)
+        if: ${{ matrix.toolchain == '1.56.0' }}
+        run: |
+          cargo test --release
+      - name: Test scrypto_statictypes (all features, MSRV)
+        if: ${{ matrix.toolchain == '1.56.0' }}
+        run: |
+          cargo test --release --all-features
+      - name: Test examples
+        run: |
+          cargo install --git https://github.com/radixdlt/radixdlt-scrypto simulator
+          for example in examples/*; do (cd $example && scrypto test); done
