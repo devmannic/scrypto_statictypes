@@ -237,6 +237,14 @@ My hope is that others find this valuable and make good use of it.  I would actu
 love to see this upstreamed completely into Scrypto.  But if that never happens
 at least we have what is hopefully a high quality library.
 
+## Tips
+
+You can support the original author (`devmannic`) with tips by sending XRD or other
+tokens on the Radix protocol mainnet to:
+
+rdx1qsppkruj82y8zsceswugc8hmm6m6x22vjgwq8tqj8jnt2vcjtmafw8geyjaj9
+
+
 # License
 
 Scrypto Static Types is distributed under the terms of both the MIT license and the
