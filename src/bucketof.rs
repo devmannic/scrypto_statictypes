@@ -47,10 +47,19 @@ impl<RES> BucketOf<RES> {
             phantom: PhantomData,
         }
     }
+
     /// Burns resource within this bucket.
     #[inline(always)]
-    pub fn burn(self, minter: BucketRef) { // must define this instead of using leaning on Deref because of self not &self (needs DerefMove which doesn't exist yet)
-        self.bucket.burn(minter);
+    pub fn burn(self) {
+        // must define this instead of leaning on Deref because of self not &self (needs DerefMove which doesn't exist yet)
+        self.bucket.burn();
+    }
+
+    /// Burns resource within this bucket.
+    #[inline(always)]
+    pub fn burn_with_auth(self, auth: BucketRef) {
+        // must define this instead of leaning on Deref because of self not &self (needs DerefMove which doesn't exist yet)
+        self.bucket.burn_with_auth(auth);
     }
 }
 
