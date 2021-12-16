@@ -75,10 +75,10 @@ blueprint! {
         my_vault: VaultOf<MYTOKEN> // the new way
     }
     pub fn new() -> Component {
-        let my_bucket = ResourceBuilder::new()  // notice we didn't have to explicitly write out the type ie. Bucket<MYTOKEN>
+        let my_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)  // notice we didn't have to explicitly write out the type ie. Bucket<MYTOKEN>
             .metadata("name", "MyToken")
             .metadata("symbol", "MYTOKEN")
-            .new_token_fixed(1000)
+            .initial_supply_fungible(1000)
             .into(); // the new way: .into() needed to convert Bucket -> Bucket<MYTOKEN>
         Self {
             // my_vault: Vault::with_bucket(my_bucket) // the old way
