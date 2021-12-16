@@ -1,6 +1,6 @@
 [package]
 name = "scrypto_statictypes"
-version = "0.1.0"
+version = "0.1.1"
 rust-version = "1.56"
 authors = ["devmannic <82296715+devmannic@users.noreply.github.com>"]
 license = "MIT OR Apache-2.0"
