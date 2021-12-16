@@ -1,14 +1,14 @@
-diff --git a/examples/badburn1/Cargo.lock b/examples/fixburn1/Cargo.lock
-index b3e8efd..524074c 100644
---- a/examples/badburn1/Cargo.lock
-+++ b/examples/fixburn1/Cargo.lock
+diff --git a/./examples/badburn1/Cargo.lock b/./examples/fixburn1/Cargo.lock
+index c8082a3..00fd0b0 100644
+--- a/./examples/badburn1/Cargo.lock
++++ b/./examples/fixburn1/Cargo.lock
 @@ -30,16 +30,6 @@ version = "1.0.1"
  source = "registry+https://github.com/rust-lang/crates.io-index"
  checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
  
 -[[package]]
 -name = "badburn1"
--version = "0.1.0"
+-version = "0.2.0"
 -dependencies = [
 - "radix-engine",
 - "sbor",
@@ -25,7 +25,7 @@ index b3e8efd..524074c 100644
  
 +[[package]]
 +name = "fixburn1"
-+version = "0.1.0"
++version = "0.2.0"
 +dependencies = [
 + "radix-engine",
 + "sbor",
@@ -36,15 +36,15 @@ index b3e8efd..524074c 100644
  [[package]]
  name = "generic-array"
  version = "0.14.4"
-diff --git a/examples/badburn1/Cargo.toml b/examples/fixburn1/Cargo.toml
-index 8f090bd..8f34a9a 100644
---- a/examples/badburn1/Cargo.toml
-+++ b/examples/fixburn1/Cargo.toml
+diff --git a/./examples/badburn1/Cargo.toml b/./examples/fixburn1/Cargo.toml
+index 6726a4b..89feeda 100644
+--- a/./examples/badburn1/Cargo.toml
++++ b/./examples/fixburn1/Cargo.toml
 @@ -1,5 +1,5 @@
  [package]
 -name = "badburn1"
 +name = "fixburn1"
- version = "0.1.0"
+ version = "0.2.0"
  edition = "2021"
  
 @@ -21,4 +21,7 @@ panic = 'abort'     # Abort on panic.
@@ -55,11 +55,11 @@ index 8f090bd..8f34a9a 100644
 +default = ["scrypto_statictypes/runtime_typechecks"]
 +
  [workspace]
-diff --git a/examples/badburn1/src/lib.rs b/examples/fixburn1/src/lib.rs
-index 8f64c0f..34978f5 100644
---- a/examples/badburn1/src/lib.rs
-+++ b/examples/fixburn1/src/lib.rs
-@@ -1,38 +1,44 @@
+diff --git a/./examples/badburn1/src/lib.rs b/./examples/fixburn1/src/lib.rs
+index 634db1e..527668f 100644
+--- a/./examples/badburn1/src/lib.rs
++++ b/./examples/fixburn1/src/lib.rs
+@@ -1,40 +1,47 @@
  use scrypto::prelude::*;
 +use scrypto_statictypes::prelude::*;
 +
@@ -83,30 +83,34 @@ index 8f64c0f..34978f5 100644
 +    impl FixBurn {
 +        pub fn new() -> (Component, Bucket, BucketOf<FLAM>) {
              // create one owner badge for auth for the burn_it functino
-             let minter = ResourceBuilder::new().new_badge_fixed(1);
+             let minter = ResourceBuilder::new_fungible(DIVISIBILITY_NONE).initial_supply_fungible(1);
              // create 1 minter badge for 2 resources, FLAM and INFLAM
-             let owner = ResourceBuilder::new().new_badge_fixed(1);
+             let owner = ResourceBuilder::new_fungible(DIVISIBILITY_NONE).initial_supply_fungible(1);
              // create FLAM and mint 1000
--            let flamable_bucket = ResourceBuilder::new()
-+            let flamable_bucket: BucketOf<FLAM> = ResourceBuilder::new()
+-            let flammable_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
++            let flammable_bucket: BucketOf<FLAM> = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
                  .metadata("name", "BurnMe")
                  .metadata("symbol", "FLAM")
-                 .new_token_mutable(minter.resource_def())
--                .mint(1000, minter.borrow());
-+                .mint(1000, minter.borrow())
+                 .flags(MINTABLE | BURNABLE)
+                 .badge(minter.resource_address(), MAY_MINT | MAY_BURN)
+-                .initial_supply_fungible(1000);
++                .initial_supply_fungible(1000)
 +                .into();
++
              // create INFLAM and mint 1000
-             let inflammable_bucket = ResourceBuilder::new()
+             let inflammable_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
                  .metadata("name", "KeepMe")
                  .metadata("symbol", "INFLAM")
-                 .new_token_mutable(minter.resource_def())
--                .mint(1000, minter.borrow());
-+                .mint(1000, minter.borrow())
+-                .flags(MINTABLE | BURNABLE)
++                .flags(MINTABLE | BURNABLE) // this specific accidental burn bug could ALSO be fixed my removing the BURNABLE flag, but that doesn't fix this entire class of bug
+                 .badge(minter.resource_address(), MAY_MINT | MAY_BURN)
+-                .initial_supply_fungible(1000);
++                .initial_supply_fungible(1000)
 +                .into();
  
              // setup component storage
--            let flam_vault = Vault::with_bucket(flamable_bucket.take(800)); // FLAM: 800 stay here, 200 are returned
-+            let flam_vault = VaultOf::with_bucket(flamable_bucket.take(800)); // FLAM: 800 stay here, 200 are returned
+-            let flam_vault = Vault::with_bucket(flammable_bucket.take(800)); // FLAM: 800 stay here, 200 are returned
++            let flam_vault = VaultOf::with_bucket(flammable_bucket.take(800)); // FLAM: 800 stay here, 200 are returned
              let c = Self {
                  flam_vault: flam_vault,
 -                inflam_vault: Vault::with_bucket(inflammable_bucket), // all 1000 INFLAM stay here
@@ -114,7 +118,7 @@ index 8f64c0f..34978f5 100644
                  auth_def: owner.resource_def(), // save this so we can use #[auth(auth_def)]
                  minter: Vault::with_bucket(minter), // keep this so we can burn)
              }
-@@ -41,7 +47,7 @@ blueprint! {
+@@ -43,7 +50,7 @@ blueprint! {
          }
  
          #[auth(auth_def)]
@@ -123,10 +127,10 @@ index 8f64c0f..34978f5 100644
              // burn all but 5, give back same amount of inflam
              if incoming.amount() > 5.into() {
                  self.flam_vault.put(incoming.take(5));
-diff --git a/examples/badburn1/tests/lib.rs b/examples/fixburn1/tests/lib.rs
-index aa8ee8c..18e4529 100644
---- a/examples/badburn1/tests/lib.rs
-+++ b/examples/fixburn1/tests/lib.rs
+diff --git a/./examples/badburn1/tests/lib.rs b/./examples/fixburn1/tests/lib.rs
+index bf77462..f139942 100644
+--- a/./examples/badburn1/tests/lib.rs
++++ b/./examples/fixburn1/tests/lib.rs
 @@ -13,7 +13,7 @@ fn test_burn_it() {
  
      // Test the `new` function.
