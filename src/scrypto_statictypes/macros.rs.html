@@ -29,23 +29,23 @@
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">declare_resource</span> {
-    ( <span class="kw">type</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span> ) <span class="op">=</span><span class="op">&gt;</span> {
+    ( <span class="kw">type</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span> ) =&gt; {
         <span class="kw">impl</span> <span class="ident">ResourceDecl</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span> {
             <span class="kw">const</span> <span class="ident">ADDRESS</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         }
     };
-    ( <span class="kw">type</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span>:<span class="ident">expr</span>  ) <span class="op">=</span><span class="op">&gt;</span> {
+    ( <span class="kw">type</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span>:<span class="ident">expr</span>  ) =&gt; {
         <span class="kw">impl</span> <span class="ident">ResourceDecl</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span> {
             <span class="kw">const</span> <span class="ident">ADDRESS</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span>);
         }
     };
-    ( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span> ) <span class="op">=</span><span class="op">&gt;</span> {
+    ( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span> ) =&gt; {
         <span class="kw">pub</span> <span class="kw">enum</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span> {}
         <span class="kw">impl</span> <span class="ident">ResourceDecl</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span> {
             <span class="kw">const</span> <span class="ident">ADDRESS</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         }
     };
-    ( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span>:<span class="ident">expr</span>  ) <span class="op">=</span><span class="op">&gt;</span> {
+    ( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span>:<span class="ident">expr</span>  ) =&gt; {
         <span class="kw">pub</span> <span class="kw">enum</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span> {}
         <span class="kw">impl</span> <span class="ident">ResourceDecl</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span> {
             <span class="kw">const</span> <span class="ident">ADDRESS</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span>);

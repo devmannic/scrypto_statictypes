@@ -126,16 +126,16 @@
     <span class="kw">type</span> <span class="ident">AddressKey</span> <span class="op">=</span> <span class="ident">std::any::TypeId</span>;
 
     <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Resource</span> {
-        <span class="kw">fn</span> <span class="ident">index</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AddressKey</span>;
-        <span class="kw">fn</span> <span class="ident">address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>;
+        <span class="kw">fn</span> <span class="ident">index</span>() -&gt; <span class="ident">AddressKey</span>;
+        <span class="kw">fn</span> <span class="ident">address</span>() -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>;
     }
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">ResourceDecl</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span> <span class="ident">Resource</span> <span class="kw">for</span> <span class="ident">T</span> {
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">fn</span> <span class="ident">index</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AddressKey</span> {
+        <span class="kw">fn</span> <span class="ident">index</span>() -&gt; <span class="ident">AddressKey</span> {
             <span class="ident">std::any::TypeId::of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>()
         }
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">fn</span> <span class="ident">address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">address</span>() -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
             <span class="ident">T::ADDRESS</span>
         }
     }
@@ -154,7 +154,7 @@
         <span class="ident">inner</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">KnownAddresses</span><span class="op">&gt;</span>,
     }
 
-    <span class="kw">fn</span> <span class="ident">singleton</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">SingletonReader</span> {
+    <span class="kw">fn</span> <span class="ident">singleton</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">SingletonReader</span> {
         <span class="comment">// Create an uninitialized static</span>
         <span class="kw">static</span> <span class="kw-2">mut</span> <span class="ident">SINGLETON</span>: <span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">SingletonReader</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MaybeUninit::uninit</span>();
         <span class="kw">static</span> <span class="ident">ONCE</span>: <span class="ident">Once</span> <span class="op">=</span> <span class="ident">Once::new</span>();
@@ -176,10 +176,10 @@
     }
     <span class="comment">// end of only_once alternative</span>
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">check_address</span><span class="op">&lt;</span><span class="ident">RES</span>: <span class="ident">Resource</span><span class="op">&gt;</span>(<span class="ident">address</span>: <span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">check_address</span><span class="op">&lt;</span><span class="ident">RES</span>: <span class="ident">Resource</span><span class="op">&gt;</span>(<span class="ident">address</span>: <span class="ident">Address</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="ident">RES::address</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">expected</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">expected</span> <span class="op">=</span><span class="op">=</span> <span class="ident">address</span>;
+            <span class="prelude-val">Some</span>(<span class="ident">expected</span>) =&gt; {
+                <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">expected</span> <span class="op">==</span> <span class="ident">address</span>;
                 <span class="kw">if</span> <span class="ident">r</span> {
                     <span class="macro">debug!</span>(
                         <span class="string">&quot;check_addr static matched: {}: {}&quot;</span>,
@@ -196,14 +196,14 @@
                 }
                 <span class="ident">r</span>
             }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">None</span> =&gt; {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">singleton</span>().<span class="ident">inner</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">guard</span>;
                 <span class="kw">let</span> <span class="ident">i</span> <span class="op">=</span> <span class="ident">RES::index</span>();
                 <span class="kw">match</span> <span class="ident">addresses</span>.<span class="ident">entry</span>(<span class="ident">i</span>) {
-                    <span class="ident">std::collections::hash_map::Entry::Occupied</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">std::collections::hash_map::Entry::Occupied</span>(<span class="ident">o</span>) =&gt; {
                         <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">o</span>.<span class="ident">get</span>();
-                        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">expected</span> <span class="op">=</span><span class="op">=</span> <span class="ident">address</span>;
+                        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">expected</span> <span class="op">==</span> <span class="ident">address</span>;
                         <span class="kw">if</span> <span class="ident">r</span> {
                             <span class="macro">debug!</span>(
                                 <span class="string">&quot;check_addr dynamic matched: {}: {}&quot;</span>,
@@ -220,7 +220,7 @@
                         }
                         <span class="ident">r</span>
                     }
-                    <span class="ident">std::collections::hash_map::Entry::Vacant</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">std::collections::hash_map::Entry::Vacant</span>(<span class="ident">v</span>) =&gt; {
                         <span class="macro">debug!</span>(
                             <span class="string">&quot;check_addr dynamic created: {}: {}&quot;</span>,
                             <span class="ident">std::any::type_name</span>::<span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span>(),
