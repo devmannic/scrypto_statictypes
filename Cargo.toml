@@ -39,11 +39,11 @@ nightly = [] # enables optimizations or features requiring nightly rust
 runtime_typechecks = []
 
 [dependencies]
-sbor = { git = "https://github.com/radixdlt/radixdlt-scrypto" }
-scrypto = { git = "https://github.com/radixdlt/radixdlt-scrypto" }
+sbor = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.1.1" }
+scrypto = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.1.1" }
 
 [dev-dependencies]
-radix-engine = { git = "https://github.com/radixdlt/radixdlt-scrypto" }
+radix-engine = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.1.1" }
 
 [profile.release]
 opt-level = 's'     # Optimize for size.
