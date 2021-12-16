@@ -47,10 +47,19 @@ impl<RES> BucketOf<RES> {
             phantom: PhantomData,
         }
     }
+
     /// Burns resource within this bucket.
     #[inline(always)]
-    pub fn burn(self, minter: BucketRef) { // must define this instead of using leaning on Deref because of self not &self (needs DerefMove which doesn't exist yet)
-        self.bucket.burn(minter);
+    pub fn burn(self) {
+        // must define this instead of leaning on Deref because of self not &self (needs DerefMove which doesn't exist yet)
+        self.bucket.burn();
+    }
+
+    /// Burns resource within this bucket.
+    #[inline(always)]
+    pub fn burn_with_auth(self, auth: BucketRef) {
+        // must define this instead of leaning on Deref because of self not &self (needs DerefMove which doesn't exist yet)
+        self.bucket.burn_with_auth(auth);
     }
 }
 
@@ -58,7 +67,7 @@ impl<RES> BucketOf<RES> {
 impl<RES: runtimechecks::Resource> From<Bucket> for BucketOf<RES> {
     fn from(bucket: Bucket) -> Self {
         if !runtimechecks::check_address::<RES>(bucket.resource_address()) {
-            let tmp_bucket = ResourceBuilder::new().new_token_fixed(1);
+            let tmp_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM).initial_supply_fungible(1);
             bucket.put(tmp_bucket); // this will trigger resource def mismatch error: Err(InvokeError(Trap(Trap { kind: Host(BucketError(MismatchingResourceDef)) })))
                                     // shouldn't get here, but just in case (and to help the compiler)
             panic!("BucketOf mismatch");

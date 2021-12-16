@@ -64,11 +64,11 @@
 //!             // static types can make the code more readable, have error messages appear on the lines closest to the problem.
 //!             // if runtime checks are used, it can abort the transaction earlier, or in the worst case detect an error the Radix Engine might miss.
 //!
-//!             // let my_bucket: BucketOf<MYTOKEN> = ResourceBuilder::new() // try this line instead of the next one to see how the compiler errors differ
-//!             let my_bucket = ResourceBuilder::new()
+//!             // let my_bucket: BucketOf<MYTOKEN> = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM) // try this line instead of the next one to see how the compiler errors differ
+//!             let my_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
 //!                 .metadata("name", "MyToken")
 //!                 .metadata("symbol", "MYT")
-//!                 .new_token_fixed(1000)
+//!                 .initial_supply_fungible(1000)
 //!                 .into(); // the .into() changes the inferred type of my_bucket from Bucket to BucketOf.
 //!
 //!             let xrd_bucket = BucketOf::<XRD>::new(RADIX_TOKEN); // the explicit "turbofish" `::<XRD>` is really only needed when calling ::new().  When creating from other buckets such as `let xrd_bucket = another_bucket.take(1);` no annotations are needed.

@@ -12,24 +12,26 @@ blueprint! {
     impl BadBurn {
         pub fn new() -> (Component, Bucket, Bucket) {
             // create one owner badge for auth for the burn_it functino
-            let minter = ResourceBuilder::new().new_badge_fixed(1);
+            let minter = ResourceBuilder::new_fungible(DIVISIBILITY_NONE).initial_supply_fungible(1);
             // create 1 minter badge for 2 resources, FLAM and INFLAM
-            let owner = ResourceBuilder::new().new_badge_fixed(1);
+            let owner = ResourceBuilder::new_fungible(DIVISIBILITY_NONE).initial_supply_fungible(1);
             // create FLAM and mint 1000
-            let flamable_bucket = ResourceBuilder::new()
+            let flammable_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
                 .metadata("name", "BurnMe")
                 .metadata("symbol", "FLAM")
-                .new_token_mutable(minter.resource_def())
-                .mint(1000, minter.borrow());
+                .flags(MINTABLE | BURNABLE)
+                .badge(minter.resource_address(), MAY_MINT | MAY_BURN)
+                .initial_supply_fungible(1000);
             // create INFLAM and mint 1000
-            let inflammable_bucket = ResourceBuilder::new()
+            let inflammable_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
                 .metadata("name", "KeepMe")
                 .metadata("symbol", "INFLAM")
-                .new_token_mutable(minter.resource_def())
-                .mint(1000, minter.borrow());
+                .flags(MINTABLE | BURNABLE)
+                .badge(minter.resource_address(), MAY_MINT | MAY_BURN)
+                .initial_supply_fungible(1000);
 
             // setup component storage
-            let flam_vault = Vault::with_bucket(flamable_bucket.take(800)); // FLAM: 800 stay here, 200 are returned
+            let flam_vault = Vault::with_bucket(flammable_bucket.take(800)); // FLAM: 800 stay here, 200 are returned
             let c = Self {
                 flam_vault: flam_vault,
                 inflam_vault: Vault::with_bucket(inflammable_bucket), // all 1000 INFLAM stay here
@@ -37,7 +39,7 @@ blueprint! {
                 minter: Vault::with_bucket(minter), // keep this so we can burn)
             }
             .instantiate();
-            (c, owner, flamable_bucket)
+            (c, owner, flammable_bucket)
         }
 
         #[auth(auth_def)]
@@ -47,7 +49,7 @@ blueprint! {
                 self.flam_vault.put(incoming.take(5));
             }
             let result = self.inflam_vault.take(incoming.amount());
-            self.minter.authorize(|auth| incoming.burn(auth));
+            self.minter.authorize(|auth| incoming.burn_with_auth(auth));
             result
         }
     }
