@@ -47,7 +47,7 @@ blueprint! {
                 self.flam_vault.put(incoming.take(5));
             }
             let result = self.inflam_vault.take(incoming.amount());
-            self.minter.authorize(|auth| incoming.burn(auth));
+            self.minter.authorize(|auth| incoming.burn_with_auth(auth));
             result
         }
     }
