@@ -67,7 +67,7 @@ impl<RES> BucketOf<RES> {
 impl<RES: runtimechecks::Resource> From<Bucket> for BucketOf<RES> {
     fn from(bucket: Bucket) -> Self {
         if !runtimechecks::check_address::<RES>(bucket.resource_address()) {
-            let tmp_bucket = ResourceBuilder::new().new_token_fixed(1);
+            let tmp_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM).initial_supply_fungible(1);
             bucket.put(tmp_bucket); // this will trigger resource def mismatch error: Err(InvokeError(Trap(Trap { kind: Host(BucketError(MismatchingResourceDef)) })))
                                     // shouldn't get here, but just in case (and to help the compiler)
             panic!("BucketOf mismatch");

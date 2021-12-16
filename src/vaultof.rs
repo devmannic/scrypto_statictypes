@@ -72,7 +72,7 @@ impl<RES> VaultOf<RES> {
 impl<RES: runtimechecks::Resource> From<Vault> for VaultOf<RES> {
     fn from(vault: Vault) -> Self {
         if !runtimechecks::check_address::<RES>(vault.resource_address()) {
-            let tmp_bucket = ResourceBuilder::new().new_token_fixed(1);
+            let tmp_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM).initial_supply_fungible(1);
             vault.put(tmp_bucket); // this will trigger resource def mismatch error error: Err(InvokeError(Trap(Trap { kind: Host(VaultError(AccountingError(MismatchingResourceDef))) })))
                                    // shouldn't get here, but just in case (and to help the compiler)
             panic!("VaultOf mismatch");
