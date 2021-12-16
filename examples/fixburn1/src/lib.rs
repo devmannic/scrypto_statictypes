@@ -20,7 +20,7 @@ blueprint! {
             // create 1 minter badge for 2 resources, FLAM and INFLAM
             let owner = ResourceBuilder::new_fungible(DIVISIBILITY_NONE).initial_supply_fungible(1);
             // create FLAM and mint 1000
-            let flamable_bucket: BucketOf<FLAM> = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
+            let flammable_bucket: BucketOf<FLAM> = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
                 .metadata("name", "BurnMe")
                 .metadata("symbol", "FLAM")
                 .flags(MINTABLE | BURNABLE)
@@ -38,7 +38,7 @@ blueprint! {
                 .into();
 
             // setup component storage
-            let flam_vault = VaultOf::with_bucket(flamable_bucket.take(800)); // FLAM: 800 stay here, 200 are returned
+            let flam_vault = VaultOf::with_bucket(flammable_bucket.take(800)); // FLAM: 800 stay here, 200 are returned
             let c = Self {
                 flam_vault: flam_vault,
                 inflam_vault: VaultOf::with_bucket(inflammable_bucket), // all 1000 INFLAM stay here
@@ -46,7 +46,7 @@ blueprint! {
                 minter: Vault::with_bucket(minter), // keep this so we can burn)
             }
             .instantiate();
-            (c, owner, flamable_bucket)
+            (c, owner, flammable_bucket)
         }
 
         #[auth(auth_def)]
