@@ -3,14 +3,16 @@ use scrypto_statictypes::prelude::*;
 
 declare_resource!(FLAM);
 declare_resource!(INFLAM);
+declare_resource!(AUTH);
+declare_resource!(MINTER);
 
 blueprint! {
     struct FixBurn {
         // Define what resources and data will be managed by Hello components
         flam_vault: VaultOf<FLAM>,
         inflam_vault: VaultOf<INFLAM>,
-        auth_def: ResourceDef,
-        minter: Vault,
+        auth_def: ResourceOf<AUTH>,
+        minter: VaultOf<MINTER>,
     }
 
     impl FixBurn {
@@ -42,8 +44,8 @@ blueprint! {
             let c = Self {
                 flam_vault: flam_vault,
                 inflam_vault: VaultOf::with_bucket(inflammable_bucket), // all 1000 INFLAM stay here
-                auth_def: owner.resource_def(), // save this so we can use #[auth(auth_def)]
-                minter: Vault::with_bucket(minter), // keep this so we can burn)
+                auth_def: owner.resource_def().into(), // save this so we can use #[auth(auth_def)]
+                minter: Vault::with_bucket(minter).into(), // keep this so we can burn)
             }
             .instantiate();
             (c, owner, flammable_bucket)
