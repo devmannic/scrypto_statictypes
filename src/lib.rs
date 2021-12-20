@@ -131,6 +131,8 @@ mod bucketof;
 mod internal;
 mod runtime;
 mod vaultof;
+mod resourceof;
+mod bucketrefof;
 
 #[macro_use]
 mod  macros;
