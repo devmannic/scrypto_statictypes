@@ -98,4 +98,45 @@ fn test_burn_it() {
     let receipt = executor.run(transaction, true).unwrap();
     println!("{:?}\n", receipt);
     assert!(!receipt.success);
+
+
+    // Test the `alt_burn_it` method < 5 of the RIGHT TYPE (use FLAM) but bad auth
+    // it will also fail even without the macro in use, because it uses BucketRefOf and runtime checks are enabled
+    let transaction = TransactionBuilder::new(&executor)
+        .call_method(
+            component_addr,
+            "alt_burn_it",
+            vec![
+                format!("3,{}", flam_addr), // use the correct type this time
+                format!("1,{}", flam_addr), // but use wrong resource address
+            ],
+            Some(account),
+        )
+        .drop_all_bucket_refs()
+        .deposit_all_buckets(account)
+        .build(vec![key])
+        .unwrap();
+    let receipt = executor.run(transaction, true).unwrap();
+    println!("{:?}\n", receipt);
+    assert!(!receipt.success);
+
+    // Again but bad auth with empty BucketRef but correct address Test the `alt_burn_it` method < 5 of the RIGHT TYPE (use FLAM) but bad auth
+    // it will also fail even without the macro in use, because it uses BucketRefOf and runtime checks are enabled
+    let transaction = TransactionBuilder::new(&executor)
+        .call_method(
+            component_addr,
+            "alt_burn_it",
+            vec![
+                format!("3,{}", flam_addr), // use the correct type this time
+                format!("0,{}", auth_addr), // but wrong amount but right address
+            ],
+            Some(account),
+        )
+        .drop_all_bucket_refs()
+        .deposit_all_buckets(account)
+        .build(vec![key])
+        .unwrap();
+    let receipt = executor.run(transaction, true).unwrap();
+    println!("{:?}\n", receipt);
+    assert!(!receipt.success);
 }

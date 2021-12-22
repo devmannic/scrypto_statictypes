@@ -50,7 +50,7 @@ impl<RES: runtimechecks::Resource> From<BucketRef> for BucketRefOf<RES> {
             panic!("BucketRef mismatch");
         }
         if bucketref.amount() <= 0.into() { // check() and contains() both check the amount, choosing to keep these semantics
-            panic!("Empty BucketRef");
+            panic!("Will not create empty BucketRefOf");
         }
         UncheckedIntoBucketRefOf::unchecked_into(bucketref)
     }

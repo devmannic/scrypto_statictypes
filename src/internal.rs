@@ -2,9 +2,6 @@ use std::ops::{Deref};
 
 pub use scrypto::prelude::{Address};
 
-#[cfg(feature = "runtime_typechecks")]
-use crate::runtime::runtimechecks;
-
 pub trait Resource: std::fmt::Debug {} // supertrait to ensure the correct traits propate to all of the templates
 
 pub trait ResourceDecl: Resource {

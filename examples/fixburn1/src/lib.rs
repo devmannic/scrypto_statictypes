@@ -61,5 +61,16 @@ blueprint! {
             self.minter.authorize(|auth| incoming.burn_with_auth(auth));
             result
         }
+
+        // auth works the same way here, as long as the runtime type checks feature is enabled, _auth will drop without needing the macroo
+        pub fn alt_burn_it(&mut self, incoming: BucketOf<FLAM>, _auth: BucketRefOf<AUTH>) -> BucketOf<INFLAM> {
+            // burn all but 5, give back same amount of inflam
+            if incoming.amount() > 5.into() {
+                self.flam_vault.put(incoming.take(5));
+            }
+            let result = self.inflam_vault.take(incoming.amount());
+            self.minter.authorize(|auth| incoming.burn_with_auth(auth));
+            result
+        }
     }
 }
