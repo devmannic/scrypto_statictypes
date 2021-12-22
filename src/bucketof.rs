@@ -2,12 +2,15 @@ use scrypto::prelude::*;
 
 use crate::internal::*;
 use crate::resourceof::ResourceOf;
-use crate::bucketrefof::BucketRefOf;
+use crate::bucketrefof::*;
 
 #[cfg(feature = "runtime_typechecks")]
 use crate::runtime::runtimechecks;
 
-pub type BucketOf<RES> = Of<Bucket, RES>;
+impl_wrapper_struct!(BucketOf<RES>, Bucket);
+impl_SBOR_traits!(BucketOf<RES>, Bucket);
+impl SBORable for Bucket {}
+impl Container for Bucket {}
 
 #[cfg(feature = "runtime_typechecks")]
 impl<RES: runtimechecks::Resource> BucketOf<RES> { // use of .into() when runtime_checks requires trait bound on runtimechecks::Resource because of From trait bound (so we need a different impl block)
@@ -27,7 +30,7 @@ impl<RES: ResourceDecl> BucketOf<RES> { // use of .into() when not(runtime_check
     }
 }
 
-impl<RES> BucketOf<RES> {
+impl<RES: Resource> BucketOf<RES> {
     /// Puts resources from another bucket into this bucket.
     #[inline(always)]
     pub fn put(&self, other: Self) {
@@ -49,9 +52,9 @@ impl<RES> BucketOf<RES> {
 
     /// Burns resource within this bucket.
     #[inline(always)]
-    pub fn burn_with_auth<AUTH>(self, auth: BucketRefOf<AUTH>) {
+    pub fn burn_with_auth<AUTH: Resource>(self, auth: BucketRefOf<AUTH>) {
         // must define this instead of leaning on Deref because of self not &self (needs DerefMove which doesn't exist yet)
-        self.inner.burn_with_auth(auth.inner);
+        self.inner.burn_with_auth(auth.inner());
     }
 
     /// Returns the resource definition of resources in this bucket.
@@ -63,7 +66,8 @@ impl<RES> BucketOf<RES> {
     /// Creates an immutable reference to this bucket.
     #[inline(always)]
     pub fn present(&self) -> BucketRefOf<RES> {
-        self.inner.present().unchecked_into()
+        //self.inner.present().unchecked_into()
+        UncheckedIntoBucketRefOf::unchecked_into(self.inner.present())
     }
 
     /// Uses resources in this bucket as authorization for an operation.

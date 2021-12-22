@@ -7,7 +7,7 @@ pub(crate) mod runtimechecks {
 
     type AddressKey = std::any::TypeId;
 
-    pub trait Resource {
+    pub trait Resource: crate::internal::Resource {
         fn index() -> AddressKey;
         fn address() -> Option<Address>;
     }

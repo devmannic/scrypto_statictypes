@@ -3,12 +3,15 @@ use scrypto::prelude::*;
 use crate::internal::*;
 use crate::bucketof::BucketOf;
 use crate::resourceof::ResourceOf;
-use crate::bucketrefof::BucketRefOf;
+use crate::bucketrefof::*;
 
 #[cfg(feature = "runtime_typechecks")]
 use crate::runtime::runtimechecks;
 
-pub type VaultOf<RES> = Of<Vault, RES>;
+impl_wrapper_struct!(VaultOf<RES>, Vault);
+impl_SBOR_traits!(VaultOf<RES>, Vault);
+impl SBORable for Vault {}
+impl Container for Vault {}
 
 #[cfg(feature = "runtime_typechecks")]
 impl<RES: runtimechecks::Resource> VaultOf<RES> { // runtime_checks requires trait bound on runtimechecks::Resource and use of .into() in new() may have runtime_checks (so we need a different impl block)
@@ -18,7 +21,7 @@ impl<RES: runtimechecks::Resource> VaultOf<RES> { // runtime_checks requires tra
     }
 }
 
-impl<RES> VaultOf<RES> {
+impl<RES: Resource> VaultOf<RES> {
     #[cfg(not(feature = "runtime_typechecks"))]
     #[inline(always)]
     pub fn new<A: Into<ResourceDef>>(resource_def: A) -> Self {
@@ -49,8 +52,8 @@ impl<RES> VaultOf<RES> {
     /// This variant of `take` accepts an additional auth parameter to support resources
     /// with or without `RESTRICTED_TRANSFER` flag on.
     #[inline(always)]
-    pub fn take_with_auth<A: Into<Decimal>, AUTH>(&self, amount: A, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
-        self.inner.take_with_auth(amount, auth.inner).unchecked_into()
+    pub fn take_with_auth<A: Into<Decimal>, AUTH: Resource>(&self, amount: A, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
+        self.inner.take_with_auth(amount, auth.inner()).unchecked_into()
     }
 
     /// Takes all resourced stored in this vault, with typed result.
@@ -65,8 +68,8 @@ impl<RES> VaultOf<RES> {
     /// This variant of `take_all` accepts an additional auth parameter to support resources
     /// with or without `RESTRICTED_TRANSFER` flag on.
     #[inline(always)]
-    pub fn take_all_with_auth<AUTH>(&self, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
-        self.inner.take_all_with_auth(auth.inner).unchecked_into()
+    pub fn take_all_with_auth<AUTH: Resource>(&self, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
+        self.inner.take_all_with_auth(auth.inner()).unchecked_into()
     }
 
     /// Takes an NFT from this vault, by id.
@@ -84,8 +87,8 @@ impl<RES> VaultOf<RES> {
     ///
     /// # Panics
     /// Panics if this is not an NFT vault or the specified NFT is not found.
-    pub fn take_nft_with_auth<AUTH>(&self, id: u128, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
-        self.inner.take_nft_with_auth(id, auth.inner).unchecked_into()
+    pub fn take_nft_with_auth<AUTH: Resource>(&self, id: u128, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
+        self.inner.take_nft_with_auth(id, auth.inner()).unchecked_into()
     }
 
     /// Returns the resource definition of resources within this vault.
@@ -120,7 +123,7 @@ impl<RES> VaultOf<RES> {
     /// This variant of `authorize` accepts an additional auth parameter to support resources
     /// with or without `RESTRICTED_TRANSFER` flag on.
     ///
-    pub fn authorize_with_auth<F: FnOnce(BucketRefOf<RES>) -> O, O, AUTH>(&self, f: F, auth: BucketRefOf<AUTH>) -> O {
+    pub fn authorize_with_auth<F: FnOnce(BucketRefOf<RES>) -> O, O, AUTH: Resource>(&self, f: F, auth: BucketRefOf<AUTH>) -> O {
         let bucket = self.take_with_auth(1, auth);
         let output = f(bucket.present());
         self.put(bucket);
