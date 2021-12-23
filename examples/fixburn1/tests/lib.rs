@@ -2,6 +2,12 @@ use radix_engine::ledger::*;
 use radix_engine::transaction::*;
 use scrypto::prelude::*;
 
+#[cfg(feature = "runtime_typechecks")]
+const RUNTIME_CHECKS: bool = true;
+
+#[cfg(not(feature = "runtime_typechecks"))]
+const RUNTIME_CHECKS: bool = false;
+
 #[test]
 fn test_burn_it() {
     // Set up environment.
@@ -97,18 +103,23 @@ fn test_burn_it() {
         .unwrap();
     let receipt = executor.run(transaction, true).unwrap();
     println!("{:?}\n", receipt);
-    assert!(!receipt.success);
+    if RUNTIME_CHECKS {
+        println!("RUNTIME_CHECKS ARE ON");
+        assert!(!receipt.success);
+    } else {
+        println!("RUNTIME_CHECKS ARE OFF");
+        assert!(receipt.success); // would succeed without runtime checks
+    }
 
 
-    // Test the `alt_burn_it` method < 5 of the RIGHT TYPE (use FLAM) but bad auth
+    // Test the `take_all_inflam` method with right amount wrong address
     // it will also fail even without the macro in use, because it uses BucketRefOf and runtime checks are enabled
     let transaction = TransactionBuilder::new(&executor)
         .call_method(
             component_addr,
-            "alt_burn_it",
+            "take_all_inflam",
             vec![
-                format!("3,{}", flam_addr), // use the correct type this time
-                format!("1,{}", flam_addr), // but use wrong resource address
+                format!("2,{}", flam_addr), // but use wrong resource address
             ],
             Some(account),
         )
@@ -118,16 +129,19 @@ fn test_burn_it() {
         .unwrap();
     let receipt = executor.run(transaction, true).unwrap();
     println!("{:?}\n", receipt);
-    assert!(!receipt.success);
+    if RUNTIME_CHECKS {
+        assert!(!receipt.success);
+    } else {
+        assert!(!receipt.success); // would still fail, because cannot Decode BucketRefOf
+    }
 
-    // Again but bad auth with empty BucketRef but correct address Test the `alt_burn_it` method < 5 of the RIGHT TYPE (use FLAM) but bad auth
+    // Again but bad auth with empty BucketRef but correct address
     // it will also fail even without the macro in use, because it uses BucketRefOf and runtime checks are enabled
     let transaction = TransactionBuilder::new(&executor)
         .call_method(
             component_addr,
-            "alt_burn_it",
+            "take_all_inflam",
             vec![
-                format!("3,{}", flam_addr), // use the correct type this time
                 format!("0,{}", auth_addr), // but wrong amount but right address
             ],
             Some(account),
@@ -138,5 +152,55 @@ fn test_burn_it() {
         .unwrap();
     let receipt = executor.run(transaction, true).unwrap();
     println!("{:?}\n", receipt);
-    assert!(!receipt.success);
+    if RUNTIME_CHECKS {
+        assert!(!receipt.success);
+    } else {
+        assert!(!receipt.success); // would still fail, because cannot Decode BucketRefOf
+    }
+
+    // Again but bad auth with not enough in  BucketRef but correct address
+    // it will also fail even without the macro in use, because it uses BucketRefOf and runtime checks are enabled
+    let transaction = TransactionBuilder::new(&executor)
+        .call_method(
+            component_addr,
+            "take_all_inflam",
+            vec![
+                format!("1,{}", auth_addr), // but wrong amount but right address
+            ],
+            Some(account),
+        )
+        .drop_all_bucket_refs()
+        .deposit_all_buckets(account)
+        .build(vec![key])
+        .unwrap();
+    let receipt = executor.run(transaction, true).unwrap();
+    println!("{:?}\n", receipt);
+    if RUNTIME_CHECKS {
+        assert!(!receipt.success);
+    } else {
+        assert!(!receipt.success); // would still fail, because cannot Decode BucketRefOf
+    }
+
+    // Again but correct
+    // it will also fail even without the macro in use, because it uses BucketRefOf and runtime checks are enabled
+    let transaction = TransactionBuilder::new(&executor)
+        .call_method(
+            component_addr,
+            "take_all_inflam",
+            vec![
+                format!("2,{}", auth_addr), // correct
+            ],
+            Some(account),
+        )
+        .drop_all_bucket_refs()
+        .deposit_all_buckets(account)
+        .build(vec![key])
+        .unwrap();
+    let receipt = executor.run(transaction, true).unwrap();
+    println!("{:?}\n", receipt);
+    if RUNTIME_CHECKS {
+        assert!(receipt.success); // correct
+    } else {
+        assert!(!receipt.success); // would fail, because cannot Decode BucketRefOf
+    }
 }

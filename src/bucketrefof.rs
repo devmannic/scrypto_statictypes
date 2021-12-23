@@ -60,8 +60,9 @@ impl<RES: runtimechecks::Resource> From<BucketRef> for BucketRefOf<RES> {
 #[cfg(not(feature = "runtime_typechecks"))]
 impl<RES: Resource> From<BucketRef> for BucketRefOf<RES> {
     #[inline(always)]
-    fn from(inner: BucketRef) -> Self {
-        UncheckedIntoBucketRefOf::unchecked_into(inner)
+    fn from(_inner: BucketRef) -> Self {
+        panic!("Unsafe creation of BucketRefOf from BucketRef.  Enable scrypto_statictypes/runtime_typechecks or use .unchecked_into()");
+        //UncheckedIntoBucketRefOf::unchecked_into(inner)
     }
 }
 

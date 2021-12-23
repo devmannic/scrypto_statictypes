@@ -19,8 +19,8 @@ blueprint! {
         pub fn new() -> (Component, Bucket, BucketOf<FLAM>) {
             // create one owner badge for auth for the burn_it functino
             let minter = ResourceBuilder::new_fungible(DIVISIBILITY_NONE).initial_supply_fungible(1);
-            // create 1 minter badge for 2 resources, FLAM and INFLAM
-            let owner = ResourceBuilder::new_fungible(DIVISIBILITY_NONE).initial_supply_fungible(1);
+            // create 1 minter badge type for 2 resources, FLAM and INFLAM, but quanity 2 to test the take_all_inflam method
+            let owner = ResourceBuilder::new_fungible(DIVISIBILITY_NONE).initial_supply_fungible(2);
             // create FLAM and mint 1000
             let flammable_bucket: BucketOf<FLAM> = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
                 .metadata("name", "BurnMe")
@@ -44,7 +44,7 @@ blueprint! {
             let c = Self {
                 flam_vault: flam_vault,
                 inflam_vault: VaultOf::with_bucket(inflammable_bucket), // all 1000 INFLAM stay here
-                auth_def: owner.resource_def().into(), // save this so we can use #[auth(auth_def)]
+                auth_def: owner.resource_def().into(), // save this so we can use #[auth(auth_def)] or BucketRefOf<AUTH> as an argument
                 minter: Vault::with_bucket(minter).into(), // keep this so we can burn)
             }
             .instantiate();
@@ -62,15 +62,10 @@ blueprint! {
             result
         }
 
-        // auth works the same way here, as long as the runtime type checks feature is enabled, _auth will drop without needing the macroo
-        pub fn alt_burn_it(&mut self, incoming: BucketOf<FLAM>, _auth: BucketRefOf<AUTH>) -> BucketOf<INFLAM> {
-            // burn all but 5, give back same amount of inflam
-            if incoming.amount() > 5.into() {
-                self.flam_vault.put(incoming.take(5));
-            }
-            let result = self.inflam_vault.take(incoming.amount());
-            self.minter.authorize(|auth| incoming.burn_with_auth(auth));
-            result
+        // auth works the same way here, as long as the runtime type checks feature is enabled, auth will drop without needing the macro
+        pub fn take_all_inflam(&mut self, auth: BucketRefOf<AUTH>) -> BucketOf<INFLAM> {
+            assert_eq!(auth.amount(), 2.into()); // need 2 badges to take everything
+            self.inflam_vault.take_all()
         }
     }
 }
