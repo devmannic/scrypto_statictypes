@@ -62,9 +62,18 @@ impl<T: Container, W: Deref<Target=T>> WithInner<T> for W {
     }
 }
 
+
+macro_rules! impl_SBOR_traits {
+    ( $w:ty, $t:ident ) => {
+        impl_SBOR_traits_without_Decode!($w, $t);
+        impl_SBOR_Decode!($w, $t);
+    };
+}
+pub(crate) use impl_SBOR_traits; // export for use within crate
+
 // generate the SBOR traits with $w wrapping type $t
 // requires $w: WithInner<$t> and $t: From<$w>
-macro_rules! impl_SBOR_traits {
+macro_rules! impl_SBOR_traits_without_Decode {
     ( $w:ty, $t:ident ) => {
     /*
     use std::ops::{Deref};
@@ -89,26 +98,7 @@ macro_rules! impl_SBOR_traits {
             self.with_inner(|inner| <$t as sbor::Encode>::encode_value(inner, encoder))
         }
     }
-    // .into implementation needs a ResourceDecl or a runtimechecks::Resource
-    #[cfg(not(feature = "runtime_typechecks"))]
-    impl<RES: ResourceDecl> sbor::Decode for $w {
-        // Decode
-        #[inline(always)]
-        fn decode_value(decoder: &mut sbor::Decoder) -> Result<Self, sbor::DecodeError> {
-            let r = <$t as sbor::Decode>::decode_value(decoder);
-            r.map(|inner| inner.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `T`'s ResourceDef (Address) with this type "RES"
-        }
-    }
-    // .into implementation needs a ResourceDecl or a runtimechecks::Resource
-    #[cfg(feature = "runtime_typechecks")]
-    impl<RES: runtimechecks::Resource> sbor::Decode for $w {
-        // Decode
-        #[inline(always)]
-        fn decode_value(decoder: &mut sbor::Decoder) -> Result<Self, sbor::DecodeError> {
-            let r = <$t as sbor::Decode>::decode_value(decoder);
-            r.map(|inner| inner.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `T`'s ResourceDef (Address) with this type "RES"
-        }
-    }
+
     impl<RES: Resource> sbor::Describe for $w {
         // Describe
         #[inline(always)]
@@ -119,8 +109,8 @@ macro_rules! impl_SBOR_traits {
     };
 }
 
+pub(crate) use impl_SBOR_traits_without_Decode; // export for use within crate
 
-pub(crate) use impl_SBOR_traits; // export for use within crate
 
 //==============
 // Main Wrapper implementation
@@ -172,3 +162,37 @@ macro_rules! impl_wrapper_struct {
     };
 }
 pub(crate) use impl_wrapper_struct; // export for use within crate
+
+macro_rules! impl_SBOR_Decode {
+    ( $w:ty, $t:ident ) => {
+    /*
+    use std::ops::{Deref};
+    use sbor::describe::Type;
+    use sbor::{Decode, DecodeError, Decoder, TypeId};
+    use sbor::{Describe, Encode, Encoder};
+    */
+    // .into implementation needs a ResourceDecl or a runtimechecks::Resource
+    #[cfg(not(feature = "runtime_typechecks"))]
+    impl<RES: ResourceDecl> sbor::Decode for $w {
+        // Decode
+        #[inline(always)]
+        fn decode_value(decoder: &mut sbor::Decoder) -> Result<Self, sbor::DecodeError> {
+            let r = <$t as sbor::Decode>::decode_value(decoder);
+            r.map(|inner| inner.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `T`'s ResourceDef (Address) with this type "RES"
+        }
+    }
+    // .into implementation needs a ResourceDecl or a runtimechecks::Resource
+    #[cfg(feature = "runtime_typechecks")]
+    impl<RES: runtimechecks::Resource> sbor::Decode for $w {
+        // Decode
+        #[inline(always)]
+        fn decode_value(decoder: &mut sbor::Decoder) -> Result<Self, sbor::DecodeError> {
+            let r = <$t as sbor::Decode>::decode_value(decoder);
+            r.map(|inner| inner.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `T`'s ResourceDef (Address) with this type "RES"
+        }
+    }
+    };
+}
+
+
+pub(crate) use impl_SBOR_Decode; // export for use within crate

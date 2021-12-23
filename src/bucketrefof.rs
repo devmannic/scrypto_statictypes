@@ -19,7 +19,12 @@ pub struct BucketRefOf<RES: Resource> {
 }
 
 // the "standard" impl and traits
+#[cfg(not(feature = "runtime_typechecks"))]
+impl_SBOR_traits_without_Decode!(BucketRefOf<RES>, BucketRef);
+#[cfg(feature = "runtime_typechecks")]
 impl_SBOR_traits!(BucketRefOf<RES>, BucketRef);
+
+
 impl SBORable for BucketRef {}
 impl Container for BucketRef {}
 
