@@ -18,11 +18,10 @@ pub struct BucketRefOf<RES: Resource> {
     phantom: PhantomData<RES>
 }
 
-// the "standard" impl and traits
-#[cfg(not(feature = "runtime_typechecks"))]
-impl_SBOR_traits_without_Decode!(BucketRefOf<RES>, BucketRef);
+// the "standard" impl and traits (but we may not have Decode, and we always have a custom Encode)
+impl_SBOR_traits_without_Encode_Decode!(BucketRefOf<RES>, BucketRef);
 #[cfg(feature = "runtime_typechecks")]
-impl_SBOR_traits!(BucketRefOf<RES>, BucketRef);
+impl_SBOR_Decode!(BucketRefOf<RES>, BucketRef);
 
 
 impl SBORable for BucketRef {}
@@ -74,9 +73,11 @@ impl<RES: Resource> From<BucketRef> for BucketRefOf<RES> {
 // custom Drop to call .drop() the inner BucketRef -- which is for Radix Engine and different from drop(BucketRef)
 impl<RES: Resource> Drop for BucketRefOf<RES> {
     fn drop(&mut self) {
-        debug!("dropping BucketRefOf {:?}", self);
         let opt = self.inner.borrow_mut().take();
-        opt.and_then(|bucketref| Some(bucketref.drop()));
+        opt.and_then(|bucketref| {
+            debug!("Drop BucketRefOf {:?}", bucketref);
+            Some(bucketref.drop())
+        });
     }
 }
 
@@ -160,5 +161,20 @@ impl<RES: Resource> BucketRefOf<RES> {
     #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.with_inner(|inner| inner.is_empty())
+    }
+}
+
+// custom Encode that takes the value so it can't be dropped twice (semantics are Encode should own/move the BucketRef)
+impl<RES: Resource> sbor::Encode for BucketRefOf<RES>
+    where BucketRefOf<RES>: WithInner<BucketRef>
+{
+    // Encode
+    #[inline(always)]
+    fn encode_value(&self, encoder: &mut sbor::Encoder) {
+        //self.with_inner(|inner| <$t as sbor::Encode>::encode_value(inner, encoder))
+        let br: BucketRef = self.inner.borrow_mut().take().unwrap(); // take so the Drop trait can't drop the BucketRef
+        debug!("Encode BucketRefOf {:?}", br);
+        <BucketRef as sbor::Encode>::encode_value(&br, encoder) // encode here
+        // let BucketRef go out of scope (it doesn't have Drop)
     }
 }

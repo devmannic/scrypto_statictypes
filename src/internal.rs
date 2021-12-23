@@ -65,7 +65,8 @@ impl<T: Container, W: Deref<Target=T>> WithInner<T> for W {
 
 macro_rules! impl_SBOR_traits {
     ( $w:ty, $t:ident ) => {
-        impl_SBOR_traits_without_Decode!($w, $t);
+        impl_SBOR_traits_without_Encode_Decode!($w, $t);
+        impl_SBOR_Encode!($w, $t);
         impl_SBOR_Decode!($w, $t);
     };
 }
@@ -73,7 +74,7 @@ pub(crate) use impl_SBOR_traits; // export for use within crate
 
 // generate the SBOR traits with $w wrapping type $t
 // requires $w: WithInner<$t> and $t: From<$w>
-macro_rules! impl_SBOR_traits_without_Decode {
+macro_rules! impl_SBOR_traits_without_Encode_Decode {
     ( $w:ty, $t:ident ) => {
     /*
     use std::ops::{Deref};
@@ -89,15 +90,6 @@ macro_rules! impl_SBOR_traits_without_Decode {
             <$t as sbor::TypeId>::type_id()
         }
     }
-    impl<RES: Resource> sbor::Encode for $w
-        where $w: WithInner<$t>
-    {
-        // Encode
-        #[inline(always)]
-        fn encode_value(&self, encoder: &mut sbor::Encoder) {
-            self.with_inner(|inner| <$t as sbor::Encode>::encode_value(inner, encoder))
-        }
-    }
 
     impl<RES: Resource> sbor::Describe for $w {
         // Describe
@@ -109,7 +101,7 @@ macro_rules! impl_SBOR_traits_without_Decode {
     };
 }
 
-pub(crate) use impl_SBOR_traits_without_Decode; // export for use within crate
+pub(crate) use impl_SBOR_traits_without_Encode_Decode; // export for use within crate
 
 
 //==============
@@ -162,6 +154,30 @@ macro_rules! impl_wrapper_struct {
     };
 }
 pub(crate) use impl_wrapper_struct; // export for use within crate
+
+
+macro_rules! impl_SBOR_Encode {
+    ( $w:ty, $t:ident ) => {
+    /*
+    use std::ops::{Deref};
+    use sbor::describe::Type;
+    use sbor::{Decode, DecodeError, Decoder, TypeId};
+    use sbor::{Describe, Encode, Encoder};
+    */
+    impl<RES: Resource> sbor::Encode for $w
+        where $w: WithInner<$t>
+    {
+        // Encode
+        #[inline(always)]
+        fn encode_value(&self, encoder: &mut sbor::Encoder) {
+            self.with_inner(|inner| <$t as sbor::Encode>::encode_value(inner, encoder))
+        }
+    }
+    };
+}
+
+pub(crate) use impl_SBOR_Encode; // export for use within crate
+
 
 macro_rules! impl_SBOR_Decode {
     ( $w:ty, $t:ident ) => {
