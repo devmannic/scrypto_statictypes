@@ -1,3 +1,25 @@
+//! This is the same as lib.rs except it explicitly does not include BucketRefOf in a Decode location so it can compile without runtime typechecks
+//! 
+//! But first, here's a short doctest showing how BucketRefOf wont compile when used as an argument
+//! ```compile_fail
+//! # #[macro_use] extern crate scrypto_statictypes;
+//! # fn main() {}
+//! use scrypto::prelude::*;
+//! use scrypto_statictypes::prelude::*;
+//!
+//! declare_resource!(AUTH);
+//!
+//! blueprint! {
+//!
+//!    struct StaticComponent {
+//!         auth_def: ResourceOf<AUTH>,
+//!     }
+//!
+//!     impl StaticComponent {
+//!         pub fn do_with_auth(&mut self, _auth: BucketRefOf<AUTH>) { /* ... */ }
+//!     }
+//! }
+//! ```
 use scrypto::prelude::*;
 use scrypto_statictypes::prelude::*;
 
@@ -62,17 +84,10 @@ blueprint! {
             result
         }
 
-        // auth works the same way here, as long as the runtime type checks feature is enabled. auth will drop without needing the macro
-        pub fn take_all_inflam(&mut self, auth: BucketRefOf<AUTH>) -> BucketOf<INFLAM> {
-            // let auth: BucketRefOf<AUTH> = auth.into(); // alternately, do this while using the auth macro with keep_auth and remove the auth parameter
-            assert_eq!(auth.amount(), 2.into()); // need 2 badges to take everything
-            self.inflam_vault.take_all()
-        }
-
         // alternately, if runtime checks are not enabled, it will fail to compile BucketRefOf<AUTH> as an argument since it purposefully does not allow Decode
         // and if used with .into() (as shown below) it will always panic since it cannot be be checked
         #[auth(auth_def, keep_auth)]
-        pub fn take_all_inflam_static(&mut self, /*auth: BucketRefOf<AUTH>*/) -> BucketOf<INFLAM> {
+        pub fn take_all_inflam(&mut self, /*auth: BucketRefOf<AUTH>*/) -> BucketOf<INFLAM> {
             let auth: BucketRefOf<AUTH> = auth.into(); // compiles, but panics
             assert_eq!(auth.amount(), 2.into()); // need 2 badges to take everything
             self.inflam_vault.take_all()
