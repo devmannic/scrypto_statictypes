@@ -28,7 +28,11 @@ pub(crate) mod runtimechecks {
     use std::mem::MaybeUninit;
     use std::sync::{Mutex, Once};
 
-    type KnownAddresses = std::collections::HashMap<AddressKey, Address>;
+    #[derive(Default)]
+    struct KnownAddresses {
+        addresses: std::collections::HashMap<AddressKey, Address>,
+        all_addresses: std::collections::HashSet<Address>,
+    }
 
     struct SingletonReader {
         // Since we will be used in many threads, we need to protect
@@ -45,7 +49,7 @@ pub(crate) mod runtimechecks {
             ONCE.call_once(|| {
                 // Make it
                 let singleton = SingletonReader {
-                    inner: Mutex::new(KnownAddresses::new()),
+                    inner: Mutex::new(KnownAddresses::default()),
                 };
                 // Store it to the static var, i.e. initialize it
                 SINGLETON.write(singleton);
@@ -80,7 +84,7 @@ pub(crate) mod runtimechecks {
             }
             None => {
                 let mut guard = singleton().inner.lock().unwrap();
-                let addresses = &mut *guard;
+                let KnownAddresses{ref mut addresses, ref mut all_addresses} = &mut *guard;
                 let i = RES::index();
                 match addresses.entry(i) {
                     std::collections::hash_map::Entry::Occupied(o) => {
@@ -103,13 +107,26 @@ pub(crate) mod runtimechecks {
                         r
                     }
                     std::collections::hash_map::Entry::Vacant(v) => {
-                        debug!(
-                            "check_addr dynamic created: {}: {}",
-                            std::any::type_name::<RES>(),
-                            address
-                        );
-                        v.insert(address);
-                        true
+                        // enforce that all Resource declarations are unique, helps detect some errors
+                        // ensure that address is not already in the resource map under another name
+                        // use the set of values to check
+                        if all_addresses.contains(&address) {
+                            error!(
+                                "check_addr dynamic cannot create address in use: {}: {}",
+                                std::any::type_name::<RES>(),
+                                address
+                            );
+                            false
+                        } else {
+                            debug!(
+                                "check_addr dynamic created: {}: {}",
+                                std::any::type_name::<RES>(),
+                                address
+                            );
+                            all_addresses.insert(address);
+                            v.insert(address);
+                            true
+                        }
                     }
                 }
             }
