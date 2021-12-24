@@ -13,8 +13,11 @@ A Scrypto (Rust) library for static types, featuring:
 
 - A simple, usable, safe, and (by default) zero-cost API for compile-time
     static type checking of resources.
-- Safe drop in replacements for `Bucket` (use: `BucketOf<MYTOKEN>`) and `Vault`
-  (use: `VaultOf<MYTOKEN>`).  Perfectly coexists with existing builtin types
+- Safe drop in replacements coexist with existing types:
+  - `Bucket` --> `BucketOf<MYTOKEN>`
+  - `Vault` --> `VaultOf<MYTOKEN>`
+  - `ResourceDef` --> `ResourceOf<MYTOKEN>`
+  - `BucketRef` --> `BucketRefOf<MYTOKEN>`
   so you can gradually apply these only where you need them.
 - Conveniently defined `BucketOf<XRD>` and `VaultOf<XRD>`
 - Simple macro to declare new resources: `declare_resource!(MYTOKEN)`
@@ -115,7 +118,13 @@ Similarly with vaults, replace:
 `Vault` -> `VaultOf<MYTOKEN>`
 
 This provides a way to explicitly name any resource.  It can be used for anything that can go
-in a `Bucket` or `Vault`.  This includes badges and (once they land in `main`) NFTs.
+in a `Bucket` or `Vault`.  This includes badges and NFTs.
+
+That's just the beginning.... You can also use `ResourceOf` instead of `ResourceDef` and
+`BucketRefOf` instead of `BucketRef`.  With runtime checks enabled, you get a more
+convenient and safe API for checks that used to be done with `#[auth(some_resource_def)]`.  You can
+use `ResourceOf<MY_AUTH>` and `BucketRefOf<MY_AUTH>`.  As a bonus the `BucketRefOf` type will automatically
+drop the reference to it's bucket exactly when needed removing boilerplate and keeping the code correct.
 
 You can replace function/method argument and return types, local variables,
 fields in structs (including the main component storage struct) etc,
@@ -124,8 +133,8 @@ It's also on the TODO list to add ABI support so that `import!(...)` can have th
 explicit types listed so the generated stub functions are created with these new types too.
 
 You can add typing gradually to your blueprint, or start at the beginning.  Simply
-use `some_bucket.into()` or `some_vault.into()` at any boundaries between known/expected static types
-and unknown dynamic types.
+use `.into()` for type checked conversions to any of the supported types, and `.unwrap()`
+to convert back to the dynamic (standard Scrypto) types.
 
 ## Documentation:
 
@@ -159,7 +168,7 @@ See the directories in [/examples](/examples) for complete scrypto packages util
 * [/examples/mycomponent](/examples/mycomponent) - Same example as in the [API reference (master branch)](https://devmannic.github.io/scrypto_statictypes) so you can easily try and see the compiler errors
 * [/examples/badburn1](/examples/badburn1) - Example blueprint which does *NOT* use `scrypto_statictypes` and has a logic error which leads to burning the bucket argument even if it was the wrong asset
 * [/examples/fixburn1](/examples/fixburn1) - Direct modification of `BadBurn` to use static types everywhere, and enable runtime type checks.  The test case shows the "bad burn" is caught and the tx fails. -- checkout just the diff of changes in [/misc/bad2fixburn1.diff](/misc/bad2fixburn1.diff)
-
+* [/examples/manyrefs](/examples/manyrefs) - Example using BucketRefOf a whole lot showing it's usefulness for nuanced authentication/verification
 
 ## Versions
 
