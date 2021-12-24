@@ -96,15 +96,11 @@ impl<RES: Resource> UncheckedIntoBucketRefOf<RES> for BucketRef {
 }
 
 // how to get the BucketRef with move semantics
-pub trait Mover {
-    type Inner;
-    fn inner(self) -> Self::Inner;
-}
-impl<RES: Resource> Mover for BucketRefOf<RES> {
-    type Inner = BucketRef;
+impl<RES: Resource> Unwrap for BucketRefOf<RES> {
+    type Value = BucketRef;
 
     #[inline(always)]
-    fn inner(self) -> Self::Inner {
+    fn unwrap(self) -> Self::Value {
         self.inner.borrow_mut().take().unwrap()
     }
 }
@@ -113,7 +109,7 @@ impl<RES: Resource> Mover for BucketRefOf<RES> {
 impl<RES: Resource> BucketRefOf<RES> {
     /// Checks if the referenced bucket contains the given resource, and aborts if not so.
     pub fn check<A: Into<ResourceDef>>(self, resource_def: A) {
-        self.inner().check(resource_def)
+        self.unwrap().check(resource_def)
     }
 
     /// Checks if the referenced bucket contains the given resource.
@@ -154,7 +150,7 @@ impl<RES: Resource> BucketRefOf<RES> {
     /// Destroys this reference.
     #[inline(always)]
     pub fn drop(self) {
-        self.inner().drop()
+        self.unwrap().drop()
     }
 
     /// Checks if the referenced bucket is empty.

@@ -53,7 +53,7 @@ impl<RES: Resource> VaultOf<RES> {
     /// with or without `RESTRICTED_TRANSFER` flag on.
     #[inline(always)]
     pub fn take_with_auth<A: Into<Decimal>, AUTH: Resource>(&self, amount: A, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
-        self.inner.take_with_auth(amount, auth.inner()).unchecked_into()
+        self.inner.take_with_auth(amount, auth.unwrap()).unchecked_into()
     }
 
     /// Takes all resourced stored in this vault, with typed result.
@@ -69,7 +69,7 @@ impl<RES: Resource> VaultOf<RES> {
     /// with or without `RESTRICTED_TRANSFER` flag on.
     #[inline(always)]
     pub fn take_all_with_auth<AUTH: Resource>(&self, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
-        self.inner.take_all_with_auth(auth.inner()).unchecked_into()
+        self.inner.take_all_with_auth(auth.unwrap()).unchecked_into()
     }
 
     /// Takes an NFT from this vault, by id.
@@ -88,7 +88,7 @@ impl<RES: Resource> VaultOf<RES> {
     /// # Panics
     /// Panics if this is not an NFT vault or the specified NFT is not found.
     pub fn take_nft_with_auth<AUTH: Resource>(&self, id: u128, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
-        self.inner.take_nft_with_auth(id, auth.inner()).unchecked_into()
+        self.inner.take_nft_with_auth(id, auth.unwrap()).unchecked_into()
     }
 
     /// Returns the resource definition of resources within this vault.

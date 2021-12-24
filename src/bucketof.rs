@@ -54,7 +54,7 @@ impl<RES: Resource> BucketOf<RES> {
     #[inline(always)]
     pub fn burn_with_auth<AUTH: Resource>(self, auth: BucketRefOf<AUTH>) {
         // must define this instead of leaning on Deref because of self not &self (needs DerefMove which doesn't exist yet)
-        self.inner.burn_with_auth(auth.inner());
+        self.inner.burn_with_auth(auth.unwrap());
     }
 
     /// Returns the resource definition of resources in this bucket.

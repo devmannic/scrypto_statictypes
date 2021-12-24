@@ -16,13 +16,13 @@ impl<RES: Resource> ResourceOf<RES> {
     /// Mints fungible resources
     #[inline(always)]
     pub fn mint<T: Into<Decimal>, AUTH: Resource>(&self, amount: T, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
-        self.inner.mint(amount, auth.inner()).unchecked_into()
+        self.inner.mint(amount, auth.unwrap()).unchecked_into()
     }
 
     /// Mints non-fungible resources
     #[inline(always)]
     pub fn mint_nft<T: NftData, AUTH: Resource>(&self, id: u128, data: T, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
-        self.inner.mint_nft(id, data, auth.inner()).unchecked_into()
+        self.inner.mint_nft(id, data, auth.unwrap()).unchecked_into()
     }
 
     /// Burns a bucket of resources.
@@ -34,7 +34,7 @@ impl<RES: Resource> ResourceOf<RES> {
     /// Burns a bucket of resources.
     #[inline(always)]
     pub fn burn_with_auth<AUTH: Resource>(&self, bucket: BucketOf<RES>, auth: BucketRefOf<AUTH>) {
-        self.inner.burn_with_auth(bucket.inner, auth.inner())
+        self.inner.burn_with_auth(bucket.inner, auth.unwrap())
     }
 }
 

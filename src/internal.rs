@@ -112,12 +112,24 @@ pub trait UncheckedInto<RES: Resource, W> {
     fn unchecked_into(self) -> W;
 }
 
+pub trait Unwrap {
+    type Value;
+    fn unwrap(self) -> Self::Value;
+}
+
 macro_rules! impl_wrapper_struct {
     ( $w:ident<RES>, $t:ty ) => {
         #[derive(Debug)] // i think this derive is ok since it SHOULD depend on what "C" really is, so not try to derive Clone if C is not Clone, similarly with PartialEq and Eq
         pub struct $w<RES> {
             pub(crate) inner: $t,
             pub(crate) phantom: std::marker::PhantomData<RES>
+        }
+        impl<RES: Resource> Unwrap for $w<RES> {
+            type Value = $t;
+            #[inline(always)]
+            fn unwrap(self) -> Self::Value {
+                self.inner
+            }
         }
         impl<RES: Resource> UncheckedInto<RES, $w<RES>> for $t {
             #[inline(always)]
