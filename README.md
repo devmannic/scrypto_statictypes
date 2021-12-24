@@ -1,7 +1,8 @@
 # Scrypto Static Types
 
 [![Test Status](https://github.com/devmannic/scrypto_statictypes/workflows/Tests/badge.svg?event=push)](https://github.com/devmannic/scrypto_statictypes/actions)
-[![Crate](https://img.shields.io/crates/v/scrypto_statictypes.svg)](https://crates.io/crates/scrypto_statictypes)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/devmannic/scrypto_statictypes?display_name=tag)
+[![Crate](https://img.shields.io/badge/crates.io-on%20hold-orange)](https://crates.io/crates/scrypto_statictypes)
 [![API](https://img.shields.io/badge/api-master-green.svg)](https://devmannic.github.io/scrypto_statictypes)
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.56+-darkgreen.svg)](https://github.com/devmannic/scrypto_statictypes#rust-version-requirements)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)](https://github.com/devmannic/scrypto_statictypes#license)
@@ -42,7 +43,7 @@ Add this to your `Cargo.toml`:
 scrypto_statictypes = { git = "https://github.com/devmannic/scrypto_statictypes" }
 ```
 
-Optionally, add this to your `Cargo.toml` for extra checks at runtime: 
+Optionally, add this to your `Cargo.toml` for extra checks at runtime:
 
 ```toml
 [features]
@@ -174,7 +175,7 @@ The intent is to:
 - Keep the `develop` branch in sync with the `radixdlt-scrypto` `develop` branch
     * As a best effort, mostly to support keeping up with `main` as quickly as possible
 
-A detailed [changelog](CHANGELOG.md) is available for releases (or at least major changes, until we have releases).
+A detailed [changelog](CHANGELOG.md) is available for releases
 
 Scrypto Static Types has not yet reached 1.0 implying some breaking changes may arrive in the
 future ([SemVer](https://semver.org/) allows each 0.x.0 release to include
@@ -226,7 +227,7 @@ This is behind a feature flag so is opt-in as it does add some extra
 performance overhead.  But, there are cases where it can absolutely detect a
 logic error due to misuse of a Bucket or Vault, when the current Radix Engine
 constraints would not stop the error.  This is because the Radix Engine just doesn't have
-the information about the developer's intent.  By what is effectly more
+the information about the developer's intent.  By using
 specific type annotations this intent can be captured and then appropriately tested
 leading to failed transactions instead of vulnerabilities.
 
