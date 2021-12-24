@@ -175,9 +175,10 @@ See the directories in [/examples](/examples) for complete scrypto packages util
 
 Scrypto Static Types is suitable for general usage, but not yet at 1.0. We maintain compatibility with Scrypto and pinned versions of the Rust compiler (see below).
 
-Current Scrypto Static Types versions are:
+Latest Scrypto Static Types versions for Scrypto versions are:
 
-- Version 0.1 was the initial release on December 1st 2021, when Scrypto was still "pre-0.1"
+- Version 0.3.0 depending on Alexandria Scrypto version 0.2.0
+- Version 0.1.1 depending on Pre-Alexandria Scrypto version 0.1.1
 
 The intent is to:
 
