@@ -1,20 +1,17 @@
-use std::marker::PhantomData;
-use std::ops::{Deref, DerefMut};
-
 use scrypto::prelude::*;
 
 use crate::internal::*;
 use crate::bucketof::BucketOf;
+use crate::resourceof::ResourceOf;
+use crate::bucketrefof::*;
 
 #[cfg(feature = "runtime_typechecks")]
 use crate::runtime::runtimechecks;
 
-/// VaultOf
-
-pub struct VaultOf<RES> {
-    vault: Vault,
-    phantom: PhantomData<RES>,
-}
+impl_wrapper_struct!(VaultOf<RES>, Vault);
+impl_SBOR_traits!(VaultOf<RES>, Vault);
+impl SBORable for Vault {}
+impl Container for Vault {}
 
 #[cfg(feature = "runtime_typechecks")]
 impl<RES: runtimechecks::Resource> VaultOf<RES> { // runtime_checks requires trait bound on runtimechecks::Resource and use of .into() in new() may have runtime_checks (so we need a different impl block)
@@ -24,7 +21,7 @@ impl<RES: runtimechecks::Resource> VaultOf<RES> { // runtime_checks requires tra
     }
 }
 
-impl<RES> VaultOf<RES> {
+impl<RES: Resource> VaultOf<RES> {
     #[cfg(not(feature = "runtime_typechecks"))]
     #[inline(always)]
     pub fn new<A: Into<ResourceDef>>(resource_def: A) -> Self {
@@ -33,37 +30,104 @@ impl<RES> VaultOf<RES> {
 
     #[inline(always)]
     pub fn with_bucket(bucketof: BucketOf<RES>) -> VaultOf<RES> {
-        VaultOf::<RES> {
-            vault: Vault::with_bucket(bucketof.bucket),
-            phantom: PhantomData,
-        }
+        Vault::with_bucket(bucketof.inner).unchecked_into()
     }
 
     /// Puts a typed bucket of resources into this vault.
     #[inline(always)]
     pub fn put(&self, other: BucketOf<RES>) {
         //self.vault.put(other.into()) // extra check
-        self.vault.put(other.bucket) // no extra check
+        self.inner.put(other.inner) // no extra check
     }
 
     /// Takes some amount of resources out of this vault, with typed result.
     #[inline(always)]
     pub fn take<A: Into<Decimal>>(&self, amount: A) -> BucketOf<RES> {
         //self.vault.take(amount).into() // extra check
-        BucketOf::<RES> {
-            bucket: self.vault.take(amount),
-            phantom: PhantomData,
-        } // no extra check
+        self.inner.take(amount).unchecked_into() // no extra check
+    }
+
+    /// Takes some amount of resource from this vault into a bucket.
+    ///
+    /// This variant of `take` accepts an additional auth parameter to support resources
+    /// with or without `RESTRICTED_TRANSFER` flag on.
+    #[inline(always)]
+    pub fn take_with_auth<A: Into<Decimal>, AUTH: Resource>(&self, amount: A, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
+        self.inner.take_with_auth(amount, auth.unwrap()).unchecked_into()
     }
 
     /// Takes all resourced stored in this vault, with typed result.
     #[inline(always)]
     pub fn take_all(&self) -> BucketOf<RES> {
         //self.vault.take_all().into() // extra check
-        BucketOf::<RES> {
-            bucket: self.vault.take_all(),
-            phantom: PhantomData,
-        } // no extra check
+        self.inner.take_all().unchecked_into() // no extra check
+    }
+
+    /// Takes all resource stored in this vault.
+    ///
+    /// This variant of `take_all` accepts an additional auth parameter to support resources
+    /// with or without `RESTRICTED_TRANSFER` flag on.
+    #[inline(always)]
+    pub fn take_all_with_auth<AUTH: Resource>(&self, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
+        self.inner.take_all_with_auth(auth.unwrap()).unchecked_into()
+    }
+
+    /// Takes an NFT from this vault, by id.
+    ///
+    /// # Panics
+    /// Panics if this is not an NFT vault or the specified NFT is not found.
+    pub fn take_nft(&self, id: u128) -> BucketOf<RES> {
+        self.inner.take_nft(id).unchecked_into()
+    }
+
+    /// Takes an NFT from this vault, by id.
+    ///
+    /// This variant of `take_nft` accepts an additional auth parameter to support resources
+    /// with or without `RESTRICTED_TRANSFER` flag on.
+    ///
+    /// # Panics
+    /// Panics if this is not an NFT vault or the specified NFT is not found.
+    pub fn take_nft_with_auth<AUTH: Resource>(&self, id: u128, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
+        self.inner.take_nft_with_auth(id, auth.unwrap()).unchecked_into()
+    }
+
+    /// Returns the resource definition of resources within this vault.
+    #[inline(always)]
+    pub fn resource_def(&self) -> ResourceOf<RES> {
+        self.inner.resource_def().unchecked_into()
+    }
+
+    /// This is a convenience method for using the contained resource for authorization.
+    ///
+    /// It conducts the following actions in one shot:
+    /// 1. Takes `1` resource from this vault into a bucket;
+    /// 2. Creates a `BucketRef`.
+    /// 3. Applies the specified function `f` with the created bucket reference;
+    /// 4. Puts the `1` resource back into this vault.
+    ///
+    pub fn authorize<F: FnOnce(BucketRefOf<RES>) -> O, O>(&self, f: F) -> O {
+        let bucket = self.take(1);
+        let output = f(bucket.present());
+        self.put(bucket);
+        output
+    }
+
+    /// This is a convenience method for using the contained resource for authorization.
+    ///
+    /// It conducts the following actions in one shot:
+    /// 1. Takes `1` resource from this vault into a bucket;
+    /// 2. Creates a `BucketRef`.
+    /// 3. Applies the specified function `f` with the created bucket reference;
+    /// 4. Puts the `1` resource back into this vault.
+    ///
+    /// This variant of `authorize` accepts an additional auth parameter to support resources
+    /// with or without `RESTRICTED_TRANSFER` flag on.
+    ///
+    pub fn authorize_with_auth<F: FnOnce(BucketRefOf<RES>) -> O, O, AUTH: Resource>(&self, f: F, auth: BucketRefOf<AUTH>) -> O {
+        let bucket = self.take_with_auth(1, auth);
+        let output = f(bucket.present());
+        self.put(bucket);
+        output
     }
 }
 
@@ -77,95 +141,6 @@ impl<RES: runtimechecks::Resource> From<Vault> for VaultOf<RES> {
                                    // shouldn't get here, but just in case (and to help the compiler)
             panic!("VaultOf mismatch");
         }
-        VaultOf::<RES> {
-            vault,
-            phantom: PhantomData,
-        }
-    }
-}
-
-#[cfg(not(feature = "runtime_typechecks"))]
-impl<RES> From<Vault> for VaultOf<RES> {
-    #[inline(always)]
-    fn from(vault: Vault) -> Self {
-        VaultOf::<RES> {
-            vault,
-            phantom: PhantomData,
-        }
-    }
-}
-
-// VaultOf <-> Vault
-
-impl<RES> From<VaultOf<RES>> for Vault {
-    #[inline(always)]
-    fn from(vaultof: VaultOf<RES>) -> Self {
-        vaultof.vault
-    }
-}
-
-impl<RES> Deref for VaultOf<RES> {
-    type Target = Vault;
-
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        &self.vault
-    }
-}
-impl<RES> DerefMut for VaultOf<RES> {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.vault
-    }
-}
-
-//=====
-// SBOR
-//=====
-
-use sbor::describe::Type;
-use sbor::{Decode, DecodeError, Decoder, TypeId};
-use sbor::{Describe, Encode, Encoder};
-
-//=============
-// VaultOf SBOR
-//=============
-
-impl<RES> TypeId for VaultOf<RES> {
-    #[inline(always)]
-    fn type_id() -> u8 {
-        // look like a Vault
-        Vault::type_id()
-    }
-}
-
-#[cfg(not(feature = "runtime_typechecks"))]
-impl<RES: ResourceDecl> Decode for VaultOf<RES> {
-    #[inline(always)]
-    fn decode_value(decoder: &mut Decoder) -> Result<Self, DecodeError> {
-        let r = Vault::decode_value(decoder);
-        r.map(|vault| vault.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `Vault`'s ResourceDef (Address) with this type "RES"
-    }
-}
-
-#[cfg(feature = "runtime_typechecks")]
-impl<RES: ResourceDecl + 'static> Decode for VaultOf<RES> { // 'static is required only when doing runtime checks because of the static storage used
-    #[inline(always)]
-    fn decode_value(decoder: &mut Decoder) -> Result<Self, DecodeError> {
-        let r = Vault::decode_value(decoder);
-        r.map(|vault| vault.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `Vault`'s ResourceDef (Address) with this type "RES"
-    }
-}
-
-impl<RES> Encode for VaultOf<RES> {
-    #[inline(always)]
-    fn encode_value(&self, encoder: &mut Encoder) {
-        self.vault.encode_value(encoder);
-    }
-}
-
-impl<RES> Describe for VaultOf<RES> {
-    fn describe() -> Type {
-        Vault::describe()
+        vault.unchecked_into()
     }
 }

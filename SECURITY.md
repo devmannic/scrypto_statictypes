@@ -16,7 +16,6 @@ exceptions for theoretical issues without a known exploit:
 
 | Crate | Versions | Exceptions |
 | ----- | -------- | ---------- |
-| `scrypto_statictypes` | 0.1 |  |
 
 
 ## Known issues

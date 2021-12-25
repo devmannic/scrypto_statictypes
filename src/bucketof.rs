@@ -1,19 +1,16 @@
-use std::marker::PhantomData;
-use std::ops::{Deref, DerefMut};
-
 use scrypto::prelude::*;
 
 use crate::internal::*;
+use crate::resourceof::ResourceOf;
+use crate::bucketrefof::*;
 
 #[cfg(feature = "runtime_typechecks")]
 use crate::runtime::runtimechecks;
 
-/// BucketOf
-
-pub struct BucketOf<RES> {
-    pub(crate) bucket: Bucket,
-    pub(crate) phantom: PhantomData<RES>,
-}
+impl_wrapper_struct!(BucketOf<RES>, Bucket);
+impl_SBOR_traits!(BucketOf<RES>, Bucket);
+impl SBORable for Bucket {}
+impl Container for Bucket {}
 
 #[cfg(feature = "runtime_typechecks")]
 impl<RES: runtimechecks::Resource> BucketOf<RES> { // use of .into() when runtime_checks requires trait bound on runtimechecks::Resource because of From trait bound (so we need a different impl block)
@@ -33,33 +30,59 @@ impl<RES: ResourceDecl> BucketOf<RES> { // use of .into() when not(runtime_check
     }
 }
 
-impl<RES> BucketOf<RES> {
+impl<RES: Resource> BucketOf<RES> {
     /// Puts resources from another bucket into this bucket.
     #[inline(always)]
     pub fn put(&self, other: Self) {
-        self.bucket.put(other.bucket)
+        self.inner.put(other.inner)
     }
+
     /// Takes some amount of resources from this bucket.
     #[inline(always)]
     pub fn take<A: Into<Decimal>>(&self, amount: A) -> Self {
-        BucketOf::<RES> {
-            bucket: self.bucket.take(amount),
-            phantom: PhantomData,
-        }
+        self.inner.take(amount).unchecked_into()
     }
 
     /// Burns resource within this bucket.
     #[inline(always)]
     pub fn burn(self) {
         // must define this instead of leaning on Deref because of self not &self (needs DerefMove which doesn't exist yet)
-        self.bucket.burn();
+        self.inner.burn();
     }
 
     /// Burns resource within this bucket.
     #[inline(always)]
-    pub fn burn_with_auth(self, auth: BucketRef) {
+    pub fn burn_with_auth<AUTH: Resource>(self, auth: BucketRefOf<AUTH>) {
         // must define this instead of leaning on Deref because of self not &self (needs DerefMove which doesn't exist yet)
-        self.bucket.burn_with_auth(auth);
+        self.inner.burn_with_auth(auth.unwrap());
+    }
+
+    /// Returns the resource definition of resources in this bucket.
+    #[inline(always)]
+    pub fn resource_def(&self) -> ResourceOf<RES> {
+        self.inner.resource_def().unchecked_into()
+    }
+
+    /// Creates an immutable reference to this bucket.
+    #[inline(always)]
+    pub fn present(&self) -> BucketRefOf<RES> {
+        //self.inner.present().unchecked_into()
+        UncheckedIntoBucketRefOf::unchecked_into(self.inner.present())
+    }
+
+    /// Uses resources in this bucket as authorization for an operation.
+    #[inline(always)]
+    pub fn authorize<F: FnOnce(BucketRefOf<RES>) -> O, O>(&self, f: F) -> O {
+        f(self.present())
+    }
+
+    /// Takes an NFT from this bucket, by id.
+    ///
+    /// # Panics
+    /// Panics if this is not an NFT bucket or the specified NFT is not found.
+    #[inline(always)]
+    pub fn take_nft(&self, id: u128) -> BucketOf<RES> {
+        self.inner.take_nft(id).unchecked_into()
     }
 }
 
@@ -72,94 +95,6 @@ impl<RES: runtimechecks::Resource> From<Bucket> for BucketOf<RES> {
                                     // shouldn't get here, but just in case (and to help the compiler)
             panic!("BucketOf mismatch");
         }
-        BucketOf::<RES> {
-            bucket,
-            phantom: PhantomData,
-        }
-    }
-}
-
-#[cfg(not(feature = "runtime_typechecks"))]
-impl<RES: ResourceDecl> From<Bucket> for BucketOf<RES> {
-    #[inline(always)]
-    fn from(bucket: Bucket) -> Self {
-        BucketOf::<RES> {
-            bucket,
-            phantom: PhantomData,
-        }
-    }
-}
-
-impl<RES> From<BucketOf<RES>> for Bucket {
-    #[inline(always)]
-    fn from(bucketof: BucketOf<RES>) -> Self {
-        bucketof.bucket
-    }
-}
-
-impl<RES> Deref for BucketOf<RES> {
-    type Target = Bucket;
-
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        &self.bucket
-    }
-}
-impl<RES> DerefMut for BucketOf<RES> {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.bucket
-    }
-}
-
-//=====
-// SBOR
-//=====
-
-use sbor::describe::Type;
-use sbor::{Decode, DecodeError, Decoder, TypeId};
-use sbor::{Describe, Encode, Encoder};
-
-//==============
-// BucketOf SBOR
-//==============
-
-impl<RES> TypeId for BucketOf<RES> {
-    #[inline(always)]
-    fn type_id() -> u8 {
-        // look like a Bucket
-        Bucket::type_id()
-    }
-}
-
-impl<RES> Encode for BucketOf<RES> {
-    #[inline(always)]
-    fn encode_value(&self, encoder: &mut Encoder) {
-        self.bucket.encode_value(encoder);
-    }
-}
-
-#[cfg(not(feature = "runtime_typechecks"))]
-impl<RES: ResourceDecl> Decode for BucketOf<RES> {
-    #[inline(always)]
-    fn decode_value(decoder: &mut Decoder) -> Result<Self, DecodeError> {
-        let r = Bucket::decode_value(decoder);
-        r.map(|bucket| bucket.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `Bucket`'s ResourceDef (Address) with this type "RES"
-    }
-}
-
-#[cfg(feature = "runtime_typechecks")]
-impl<RES: ResourceDecl + 'static> Decode for BucketOf<RES> { // 'static is required only when doing runtime checks because of the static storage used
-    #[inline(always)]
-    fn decode_value(decoder: &mut Decoder) -> Result<Self, DecodeError> {
-        let r = Bucket::decode_value(decoder);
-        r.map(|bucket| bucket.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `Bucket`'s ResourceDef (Address) with this type "RES"
-    }
-}
-
-impl<RES> Describe for BucketOf<RES> {
-    #[inline(always)]
-    fn describe() -> Type {
-        Bucket::describe()
+        bucket.unchecked_into()
     }
 }

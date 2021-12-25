@@ -20,8 +20,10 @@ panic = 'abort'     # Abort on panic.
 [lib]
 crate-type = ["cdylib", "lib"]
 name = "out"
+path = "src/choose.rs"
 
 [features]
-default = ["scrypto_statictypes/runtime_typechecks"]
+default = ["runtime_typechecks"]
+runtime_typechecks = ["scrypto_statictypes/runtime_typechecks"]
 
 [workspace]

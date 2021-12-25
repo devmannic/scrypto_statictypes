@@ -13,10 +13,12 @@ A Scrypto (Rust) library for static types, featuring:
 
 - A simple, usable, safe, and (by default) zero-cost API for compile-time
     static type checking of resources.
-- Safe drop in replacements for `Bucket` (use: `BucketOf<MYTOKEN>`) and `Vault`
-  (use: `VaultOf<MYTOKEN>`).  Perfectly coexists with existing builtin types
-  so you can gradually apply these only where you need them.
-- Conveniently defined `BucketOf<XRD>` and `VaultOf<XRD>`
+- Safe drop in replacements coexist with existing types.  Gradually apply these only where you need them:
+  - `Bucket` --> `BucketOf<MYTOKEN>`
+  - `Vault` --> `VaultOf<MYTOKEN>`
+  - `ResourceDef` --> `ResourceOf<MYTOKEN>`
+  - `BucketRef` --> `BucketRefOf<MYTOKEN>`
+- Conveniently defined `XRD` Resource to use with `VaultOf<XRD>`, and friends.
 - Simple macro to declare new resources: `declare_resource!(MYTOKEN)`
 - Optional feature `runtime_typechecks` for safety critical code, or use in
   testing.
@@ -115,17 +117,25 @@ Similarly with vaults, replace:
 `Vault` -> `VaultOf<MYTOKEN>`
 
 This provides a way to explicitly name any resource.  It can be used for anything that can go
-in a `Bucket` or `Vault`.  This includes badges and (once they land in `main`) NFTs.
+in a `Bucket` or `Vault`.  This includes badges and NFTs.
 
-You can replace function/method argument and return types, local variables,
-fields in structs (including the main component storage struct) etc,
+That's just the beginning.... You can also replace:
 
-It's also on the TODO list to add ABI support so that `import!(...)` can have these same
-explicit types listed so the generated stub functions are created with these new types too.
+`ResourceDef` -> `ResourceOf<MYTOKEN>`
 
-You can add typing gradually to your blueprint, or start at the beginning.  Simply
-use `some_bucket.into()` or `some_vault.into()` at any boundaries between known/expected static types
-and unknown dynamic types.
+`BucketRef` -> `BucketRefOf<MYTOKEN>`
+
+And with runtime checks enabled, you get a more
+convenient and safe API for checks that used to be done with `#[auth(some_resource_def)]`.  You can
+use one or more `BucketRefOf` arguments to limit access without manual checks against
+`some_resource_def`.  Simply change the type of `some_resource_def` to `ResourceOf<SOMETHING>` in the Component struct.  Or if you already have a `VaultOf<SOMETHING>` no new `ResourceOf` is needed.
+
+To let the compiler help as much as possible the `BucketRefOf` type will automatically
+drop the reference to its bucket when it goes out of scope.  This works correctly when returning `BucketRefOf`s or calling other functions/methods. Never worry about explicitly calling `bucketref.drop()`.
+
+These new types are usable everywhere: replace function/method argument and return types, local variables, fields in structs (including the main component storage struct).  Everything just works.
+
+For converting existing blueprints just add typing gradually and follow the compiler warnings as a way to audit the code and reach a more secure implementation.  At the "boundaries" where these static types need to be converted, simply use `.into()` for type checked conversions into any of these new types, and `.unwrap()` to convert back to the old, dynamic (standard Scrypto) types.
 
 ## Documentation:
 
@@ -159,15 +169,16 @@ See the directories in [/examples](/examples) for complete scrypto packages util
 * [/examples/mycomponent](/examples/mycomponent) - Same example as in the [API reference (master branch)](https://devmannic.github.io/scrypto_statictypes) so you can easily try and see the compiler errors
 * [/examples/badburn1](/examples/badburn1) - Example blueprint which does *NOT* use `scrypto_statictypes` and has a logic error which leads to burning the bucket argument even if it was the wrong asset
 * [/examples/fixburn1](/examples/fixburn1) - Direct modification of `BadBurn` to use static types everywhere, and enable runtime type checks.  The test case shows the "bad burn" is caught and the tx fails. -- checkout just the diff of changes in [/misc/bad2fixburn1.diff](/misc/bad2fixburn1.diff)
-
+* [/examples/manyrefs](/examples/manyrefs) - Example using BucketRefOf a whole lot showing it's usefulness for nuanced authentication/verification
 
 ## Versions
 
 Scrypto Static Types is suitable for general usage, but not yet at 1.0. We maintain compatibility with Scrypto and pinned versions of the Rust compiler (see below).
 
-Current Scrypto Static Types versions are:
+Latest Scrypto Static Types versions for Scrypto versions are:
 
-- Version 0.1 was the initial release on December 1st 2021, when Scrypto was still "pre-0.1"
+- Version 0.3.0 depending on Alexandria Scrypto version 0.2.0
+- Version 0.1.1 depending on Pre-Alexandria Scrypto version 0.1.1
 
 The intent is to:
 
@@ -206,15 +217,17 @@ I believe Radix will be a game-changing technology stack for Decentralized
 Finance.  Scrypto is already amazing and going to continue to evolve.  I think
 at this very early stage it does so many things right, however it's a missed
 opportunity to treat all `Bucket`s and `Vault`s as dynamic types that could
-hold anything, when in fact they are bound by their `ResourceDef` upon creation
-(for Buckets) and the moment something is deposited (for Vaults).  This can lead
-to entire classes of logic errors which are otherwise not possible.  This means
+hold anything, when in fact they are bound by their `ResourceDef` upon creation.
+There is also a lot of duplicate code checking `BucketRef`s as the main form of
+authentication when it could be done declaratively in more places than just the existing
+auth macros.  These omissions can lead
+to entire classes of logic errors which could be avoided.  This means
 lost productivity at best, and real vulnerabilities at worst.  I didn't want
 development practices to standardize leaving these gaps.
 
 So, I took up the challenge to find a *usable* way to recreate strong static
-types with no runtime cost.  This meant not introducing a new API for dealing
-with Vaults and Buckets.  This is possible with minimal reimplementation which
+types with no (or at least minimal) runtime cost.  This meant not introducing a new API for dealing
+with Vaults and Buckets.  This is possible with minimal re-implementation which
 is inlined and effectively disappears since they are just proxies around the
 original types.  The main changes are to enable type propagation in parameters
 and return types, and then implementing Rust's `Deref` and `DerefMut` traits
@@ -235,7 +248,7 @@ All of this is completely optional, and it can be used to *gradually* add types
 to programs where it is helpful.
 
 My hope is that others find this valuable and make good use of it.  I would actually
-love to see this upstreamed completely into Scrypto.  But if that never happens
+love to see this merged upstream into Scrypto.  But if that never happens
 at least we have what is hopefully a high quality library.
 
 ## Tips
@@ -243,7 +256,7 @@ at least we have what is hopefully a high quality library.
 You can support the original author (`devmannic`) with tips by sending XRD or other
 tokens on the Radix protocol mainnet to:
 
-rdx1qsppkruj82y8zsceswugc8hmm6m6x22vjgwq8tqj8jnt2vcjtmafw8geyjaj9
+`rdx1qsppkruj82y8zsceswugc8hmm6m6x22vjgwq8tqj8jnt2vcjtmafw8geyjaj9`
 
 
 # License
