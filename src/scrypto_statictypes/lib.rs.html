@@ -140,19 +140,25 @@
 <span id="140">140</span>
 <span id="141">141</span>
 <span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Use explicit container types with Scrypto!  Leverage the Rust compiler&#39;s type checking to increase security and productivity when developing Radix blueprints.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! A Scrypto (Rust) library for static types, featuring:</span>
-<span class="doccomment">//!</span>
+<span class="doccomment">//! </span>
 <span class="doccomment">//! - A simple, usable, safe, and (by default) zero-cost API for compile-time</span>
 <span class="doccomment">//!     static type checking of resources.</span>
-<span class="doccomment">//! - Safe drop in replacements for `Bucket` (use: `BucketOf&lt;MYTOKEN&gt;`) and `Vault`</span>
-<span class="doccomment">//!   (use: `VaultOf&lt;MYTOKEN&gt;`).  Perfectly coexists with existing builtin types</span>
-<span class="doccomment">//!   so you can gradually apply these only where you need them.</span>
-<span class="doccomment">//! - Conveniently defined `BucketOf&lt;XRD&gt;` and `VaultOf&lt;XRD&gt;`</span>
+<span class="doccomment">//! - Safe drop in replacements coexist with existing types.  Gradually apply these only where you need them:</span>
+<span class="doccomment">//!   - `Bucket` --&gt; `BucketOf&lt;MYTOKEN&gt;`</span>
+<span class="doccomment">//!   - `Vault` --&gt; `VaultOf&lt;MYTOKEN&gt;`</span>
+<span class="doccomment">//!   - `ResourceDef` --&gt; `ResourceOf&lt;MYTOKEN&gt;`</span>
+<span class="doccomment">//!   - `BucketRef` --&gt; `BucketRefOf&lt;MYTOKEN&gt;`</span>
+<span class="doccomment">//! - Conveniently defined `XRD` Resource to use with `VaultOf&lt;XRD&gt;`, and friends.</span>
 <span class="doccomment">//! - Simple macro to declare new resources: `declare_resource!(MYTOKEN)`</span>
 <span class="doccomment">//! - Optional feature `runtime_typechecks` for safety critical code, or use in</span>
-<span class="doccomment">//!   testing</span>
+<span class="doccomment">//!   testing.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! # Quick Start</span>
 <span class="doccomment">//!</span>
@@ -273,6 +279,8 @@
 <span class="kw">mod</span> <span class="ident">internal</span>;
 <span class="kw">mod</span> <span class="ident">runtime</span>;
 <span class="kw">mod</span> <span class="ident">vaultof</span>;
+<span class="kw">mod</span> <span class="ident">resourceof</span>;
+<span class="kw">mod</span> <span class="ident">bucketrefof</span>;
 
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">mod</span>  <span class="ident">macros</span>;

@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Address","Represents an address."]],"macro":[["declare_resource",""]],"struct":[["BucketOf","BucketOf"],["VaultOf","VaultOf"]],"trait":[["ResourceDecl",""]]});
+initSidebarItems({"enum":[["Address","Represents an address."]],"macro":[["declare_resource",""]],"struct":[["BucketOf",""],["BucketRefOf",""],["ResourceOf",""],["VaultOf",""]],"trait":[["StaticResource",""],["StaticResourceDecl",""],["UncheckedInto",""],["Unwrap",""],["WithInner",""]]});
