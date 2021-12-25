@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Bucket and Vault container types - have methods which require ResourceOf and BucketRefOf
 - Refactored with macros for better code reuse while retaining good error messages
+- Runtime checks ensure resource name to address mapping is 1:1 to catch certain errors
 
 ## [0.2.0] - 2021-12-16
 ### Changed
