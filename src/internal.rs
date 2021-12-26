@@ -163,9 +163,26 @@ macro_rules! impl_wrapper_struct {
                 inner.unchecked_into()
             }
         }
+
+        impl_wrapper_common!($w<RES>, $t);
     };
 }
 pub(crate) use impl_wrapper_struct; // export for use within crate
+
+// common implementations that only depend on traits of $t or $w
+// and are not expected to need custom implementations (like From<$t> for $w<RES> when not(feature = "runtime_typechecks"))
+macro_rules! impl_wrapper_common {
+    ( $w:ident<RES>, $t:ty ) => {
+        impl<RES: Resource> From<$w<RES>> for $t {
+            #[inline(always)]
+            fn from(wrapped: $w<RES>) -> Self {
+                wrapped.unwrap()
+            }
+        }
+    };
+}
+
+pub(crate) use impl_wrapper_common; // export for use within crate
 
 
 macro_rules! impl_SBOR_Encode {
@@ -209,6 +226,7 @@ macro_rules! impl_SBOR_Decode {
             r.map(|inner| inner.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `T`'s ResourceDef (Address) with this type "RES"
         }
     }
+
     // .into implementation needs a ResourceDecl or a runtimechecks::Resource
     #[cfg(feature = "runtime_typechecks")]
     impl<RES: runtimechecks::Resource> sbor::Decode for $w {

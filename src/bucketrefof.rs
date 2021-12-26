@@ -9,7 +9,8 @@ use crate::resourceof::ResourceOf;
 #[cfg(feature = "runtime_typechecks")]
 use crate::runtime::runtimechecks;
 
-//impl_wrapper_struct!(BucketRefOf<RES>, Bucket); // can't use this with Drop, so instead custom implementation below
+//impl_wrapper_struct!(BucketRefOf<RES>, BucketRef); // can't use this with Drop, so instead custom implementation below
+impl_wrapper_common!(BucketRefOf<RES>, BucketRef); // still want the common implementation
 
 // custom BucketRefOf using RefCell so we can implement Drop
 #[derive(Debug)]
@@ -60,6 +61,8 @@ impl<RES: runtimechecks::Resource> From<BucketRef> for BucketRefOf<RES> {
     }
 }
 
+// choosing to implement this with panic! instead of unchecked_into because BucketRef is used for autnentication and silently converting at runtime is worse than
+// with other types like Vault and Bucket where there is more benefit to allow gradual typing
 // custom impl From<BucketRef> since we can't use impl_wrapper_struct! for BucketRefOf
 #[cfg(not(feature = "runtime_typechecks"))]
 impl<RES: Resource> From<BucketRef> for BucketRefOf<RES> {
