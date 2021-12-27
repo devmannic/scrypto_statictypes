@@ -1,6 +1,7 @@
 use crate::internal::*;
 use crate::bucketof::*;
-use scrypto::prelude::{Bucket, Account};
+use crate::resourceof::*;
+use scrypto::prelude::{Bucket, Account, Decimal, ResourceDef, scrypto_encode, scrypto_decode, call_method, scrypto_unwrap};
 
 //
 // Deposit
@@ -39,8 +40,45 @@ pub trait DepositOf<RES: Resource>
     }
 }
 
+//
+// Withdraw
+//
+
+pub trait Withdraw {
+    fn withdraw<A: Into<ResourceDef>>(&self, amount: Decimal, resource_def: A) -> Bucket;
+}
+impl Withdraw for Account {
+    // #[inline(always)] // put this back if the bug is fixed
+    fn withdraw<A: Into<ResourceDef>>(&self, amount: Decimal, resource_def: A) -> Bucket {
+        // Account::withdraw(self, amount, resource_def) // BUG in Scrypto implementation missing return Bucket?  Reimplement here for now
+        let args = vec![
+            scrypto_encode(&amount),
+            scrypto_encode(&resource_def.into()),
+        ];
+        let rtn = call_method(self.address(), "withdraw", args);
+        scrypto_unwrap(scrypto_decode(&rtn))
+    }
+}
+
+// I think because withdraw has generics in both the parameters and return value, the WithdrawExt is unneccessary, and adding "RHS" may not be needed... Need to test this
+
+pub trait WithdrawOf<RES: Resource>
+    where Self: Withdraw
+{
+    #[inline(always)]
+    fn withdraw<A: Into<ResourceOf<RES>>>(&self, amount: Decimal, resource_def: A) -> BucketOf<RES> { // change to ResourceOf creates static type check (and BucketOf<RES>)
+        let resource_def: ResourceOf<RES> = resource_def.into(); // may do runtime check
+        let bucket: Bucket = <Self as Withdraw>::withdraw(self, amount, resource_def.unwrap());
+        bucket.unchecked_into() // avoid an extra runtime check
+    }
+}
+
 
 // Deposit* for Account
 
 impl<RES: Resource> DepositExt<RES> for Account {}
 impl<RES: Resource> DepositOf<RES> for Account {}
+
+// Withdraw* for Account
+
+impl<RES: Resource> WithdrawOf<RES> for Account {}
