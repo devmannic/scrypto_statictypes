@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Common impl for From<$w> for $t to automatically unwrap making API usage cleaner
+- `Account::deposit_of::<RESOURCE>`
 
 ## [0.3.0] - 2021-12-24
 ### Added
