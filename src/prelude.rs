@@ -15,5 +15,5 @@ pub use crate::bucketrefof::BucketRefOf;
 pub use crate::macros::*; // this is for things a macro might generate
 pub use crate::{declare_resource}; // this is for the macros themselves, and must be explicitly named (at top level due to #[macro_export])
 pub use crate::internal::{Unwrap, WithInner, UncheckedInto}; // to access trait methods with_inner(...) and unchecked_into()
-pub use crate::exts::{Deposit, DepositOf, DepositExt};
+pub use crate::exts::{Deposit, DepositOf, DepositOfExplicit, Withdraw, WithdrawOf, WithdrawOfExplicit};
 

@@ -1,7 +1,16 @@
+/// DepositOf and WithdrawOf
 use crate::internal::*;
 use crate::bucketof::*;
 use crate::resourceof::*;
 use scrypto::prelude::{Bucket, Account, Decimal, ResourceDef, scrypto_encode, scrypto_decode, call_method, scrypto_unwrap};
+
+#[cfg(feature = "runtime_typechecks")]
+use crate::runtime::runtimechecks;
+
+/// marker to force equivalence between 2 resources (type parameters) at compile time
+pub trait ResourceIs<RES: Resource> {}
+impl<RES: Resource> ResourceIs<RES> for RES {}
+
 
 //
 // Deposit
@@ -17,26 +26,25 @@ impl Deposit for Account {
     }
 }
 
-pub trait DepositExt<RES: Resource>
+pub trait DepositOf
     where Self: Deposit
 {
     #[inline(always)]
-    fn deposit(&self, bucket: BucketOf<RES>) {
+    fn deposit_of<RHS: Resource>(&self, bucket: BucketOf<RHS>) // RHS allows for specifying the resource with the function, or eliding it with the correct BucketOf
+    {
         <Self as Deposit>::deposit(self, bucket.unwrap())
     }
 }
 
-// make deposit_of call require compile time check that RES = RHS
-pub trait DepositOf<RES: Resource>
-    where Self: DepositExt<RES>
+/// Explicitly requires deposit_of::<RES> syntax instead of of automatically allowing any BucketOf<_> parameter
+pub trait DepositOfExplicit<RES: Resource>
+    where Self: Deposit
 {
     #[inline(always)]
-    fn deposit_of<RHS: Resource>(&self, bucket: BucketOf<RHS>)
-    where dyn DepositExt<RES>: DepositExt<RHS> // constrain that DepositExt<RES> allows DepositExt<RHS> (also constrains RES)
-    //where Self: DepositExt<RHS> // this doesn't quite work, leads to "cannot infer type for type parameter 'RES' declared on the trait 'DepositOf'"
+    fn deposit_of<RHS: Resource>(&self, bucket: BucketOf<RES>)
+    where RHS: ResourceIs<RES>
     {
-        //<Self as DepositExt<RES>>::deposit(self, bucket.unwrap().unchecked_into())
-        <Self as Deposit>::deposit(self, bucket.unwrap()) // potentially less code than the line above
+        <Self as Deposit>::deposit(self, bucket.unwrap())
     }
 }
 
@@ -50,7 +58,7 @@ pub trait Withdraw {
 impl Withdraw for Account {
     // #[inline(always)] // put this back if the bug is fixed
     fn withdraw<A: Into<ResourceDef>>(&self, amount: Decimal, resource_def: A) -> Bucket {
-        // Account::withdraw(self, amount, resource_def) // BUG in Scrypto implementation missing return Bucket?  Reimplement here for now
+        // Account::withdraw(self, amount, resource_def) // BUG in Scrypto implementation missing return Bucket?  Reimplement here for now -- https://github.com/radixdlt/radixdlt-scrypto/issues/107
         let args = vec![
             scrypto_encode(&amount),
             scrypto_encode(&resource_def.into()),
@@ -60,25 +68,58 @@ impl Withdraw for Account {
     }
 }
 
-// I think because withdraw has generics in both the parameters and return value, the WithdrawExt is unneccessary, and adding "RHS" may not be needed... Need to test this
-
-pub trait WithdrawOf<RES: Resource>
+pub trait WithdrawOf
     where Self: Withdraw
 {
+    #[cfg(feature = "runtime_typechecks")]
     #[inline(always)]
-    fn withdraw<A: Into<ResourceOf<RES>>>(&self, amount: Decimal, resource_def: A) -> BucketOf<RES> { // change to ResourceOf creates static type check (and BucketOf<RES>)
-        let resource_def: ResourceOf<RES> = resource_def.into(); // may do runtime check
-        let bucket: Bucket = <Self as Withdraw>::withdraw(self, amount, resource_def.unwrap());
-        bucket.unchecked_into() // avoid an extra runtime check
+    // RHS allows for specifying the resource with the function, or eliding it with the correct ResourceOf
+    fn withdraw_of<RHS: runtimechecks::Resource>(&self, amount: Decimal, resource_of: ResourceOf<RHS>) -> BucketOf<RHS>
+    {
+        <Self as Withdraw>::withdraw(self, amount, resource_of).into() // do checked into here since external method call could return any type of bucket
+    }
+
+    #[cfg(not(feature = "runtime_typechecks"))]
+    #[inline(always)]
+    // RHS allows for specifying the resource with the function, or eliding it with the correct ResourceOf
+    fn withdraw_of<RHS: ResourceDecl>(&self, amount: Decimal, resource_of: ResourceOf<RHS>) -> BucketOf<RHS>
+    {
+        <Self as Withdraw>::withdraw(self, amount, resource_of).into() // do checked into here since external method call could return any type of bucket
     }
 }
 
+#[cfg(not(feature = "runtime_typechecks"))]
+/// Explicitly requires withdraw_of::<RES> syntax instead of of automatically allowing any ResourceOf<_> parameter
+pub trait WithdrawOfExplicit<RES: ResourceDecl>
+    where Self: Withdraw
+{
+    #[inline(always)]
+    fn withdraw_of<RHS: ResourceDecl>(&self, amount: Decimal, resource_of: ResourceOf<RES>) -> BucketOf<RES>
+    where RHS: ResourceIs<RES>
+    {
+        <Self as Withdraw>::withdraw(self, amount, resource_of).into() // do checked into here since external method call could return any type of bucket
+    }
+}
 
-// Deposit* for Account
+#[cfg(feature = "runtime_typechecks")]
+/// Explicitly requires withdraw_of::<RES> syntax instead of of automatically allowing any ResourceOf<_> parameter
+pub trait WithdrawOfExplicit<RES: runtimechecks::Resource>
+    where Self: Withdraw
+{
+    #[inline(always)]
+    fn withdraw_of<RHS: runtimechecks::Resource>(&self, amount: Decimal, resource_of: ResourceOf<RES>) -> BucketOf<RES>
+    where RHS: ResourceIs<RES>
+    {
+        <Self as Withdraw>::withdraw(self, amount, resource_of).into() // do checked into here since external method call could return any type of bucket
+    }
+}
 
-impl<RES: Resource> DepositExt<RES> for Account {}
-impl<RES: Resource> DepositOf<RES> for Account {}
+// Apply to Account
 
-// Withdraw* for Account
-
-impl<RES: Resource> WithdrawOf<RES> for Account {}
+// impl DepositOf for Account {} // prefer Explicit, TODO make this configurable with feature flag?
+impl<RES: Resource> DepositOfExplicit<RES> for Account {}
+//impl WithdrawOf for Account {} // prefer Explicit, TODO make this configurable with feature flag?
+#[cfg(not(feature = "runtime_typechecks"))]
+impl<RES: ResourceDecl> WithdrawOfExplicit<RES> for Account {}
+#[cfg(feature = "runtime_typechecks")]
+impl<RES: runtimechecks::Resource> WithdrawOfExplicit<RES> for Account {}
