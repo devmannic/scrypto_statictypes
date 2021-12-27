@@ -16,7 +16,7 @@ macro_rules! declare_resource {
     };
     ( $x:ident ) => {
         #[derive(Debug)]
-        pub enum $x {}
+        #[allow(non_camel_case_types)] pub enum $x {}
         impl StaticResource for $x {}
         impl StaticResourceDecl for $x {
             const ADDRESS: Option<Address> = None;
@@ -24,7 +24,7 @@ macro_rules! declare_resource {
     };
     ( $x:ident, $e:expr  ) => {
         #[derive(Debug)]
-        pub enum $x {}
+        #[allow(non_camel_case_types)] pub enum $x {}
         impl StaticResource for $x {}
         impl StaticResourceDecl for $x {
             const ADDRESS: Option<Address> = Some($e);

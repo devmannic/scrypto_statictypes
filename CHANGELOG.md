@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Common impl for From<$w> for $t to automatically unwrap making API usage cleaner
 - `Account::deposit_of::<RESOURCE>` and `Account::withdraw_of::<RESOURCE>`
+### Fixed
+- warnings on resource names (any case is now allowed)
 
 ## [0.3.0] - 2021-12-24
 ### Added
