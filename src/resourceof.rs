@@ -48,3 +48,19 @@ impl<RES: runtimechecks::Resource> From<ResourceDef> for ResourceOf<RES> {
         resource_def.unchecked_into()
     }
 }
+
+// Implement == and != between ResourceDef and ResourceOf
+
+impl<RES: Resource> PartialEq<ResourceOf<RES>> for ResourceDef {
+    #[inline(always)]
+    fn eq(&self, other: &ResourceOf<RES>) -> bool {
+        self.address() == other.address()
+    }
+}
+
+impl<RES: Resource> PartialEq<ResourceDef> for ResourceOf<RES> {
+    #[inline(always)]
+    fn eq(&self, other: &ResourceDef) -> bool {
+        self.address() == other.address()
+    }
+}
