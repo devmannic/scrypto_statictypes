@@ -64,3 +64,10 @@ impl<RES: Resource> PartialEq<ResourceDef> for ResourceOf<RES> {
         self.address() == other.address()
     }
 }
+
+impl<RES: Resource> PartialEq<ResourceOf<RES>> for ResourceOf<RES> {
+    #[inline(always)]
+    fn eq(&self, other: &ResourceOf<RES>) -> bool {
+        self.address() == other.address()
+    }
+}
