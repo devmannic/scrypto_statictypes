@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comparison between ResourceDef and ResourceOf with == and !=
 ### Fixed
 - warnings on resource names (any case is now allowed)
+- missing trait in prelude hiding BucketRefOf::unchecked_into
 
 ## [0.3.0] - 2021-12-24
 ### Added
