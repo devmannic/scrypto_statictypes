@@ -22,7 +22,7 @@ blueprint! {
             // create 1 minter badge type for 2 resources, FLAM and INFLAM, but quanity 2 to test the take_all_inflam method
             let owner = ResourceBuilder::new_fungible(DIVISIBILITY_NONE).initial_supply_fungible(2);
             // create FLAM and mint 1000
-            let flammable_bucket: BucketOf<FLAM> = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
+            let mut flammable_bucket: BucketOf<FLAM> = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
                 .metadata("name", "BurnMe")
                 .metadata("symbol", "FLAM")
                 .flags(MINTABLE | BURNABLE)
@@ -52,7 +52,7 @@ blueprint! {
         }
 
         #[auth(auth_def)]
-        pub fn burn_it(&mut self, incoming: BucketOf<FLAM>) -> BucketOf<INFLAM> {
+        pub fn burn_it(&mut self, mut incoming: BucketOf<FLAM>) -> BucketOf<INFLAM> {
             // burn all but 5, give back same amount of inflam
             if incoming.amount() > 5.into() {
                 self.flam_vault.put(incoming.take(5));
@@ -71,7 +71,7 @@ blueprint! {
 
         // alternately, if runtime checks are not enabled, it will fail to compile BucketRefOf<AUTH> as an argument since it purposefully does not allow Decode
         // and if used with .into() (as shown below) it will always panic since it cannot be be checked
-        #[auth(auth_def, keep_auth)]
+        #[auth(auth_def)]
         pub fn take_all_inflam_static(&mut self, /*auth: BucketRefOf<AUTH>*/) -> BucketOf<INFLAM> {
             let auth: BucketRefOf<AUTH> = auth.into(); // compiles, but panics
             assert_eq!(auth.amount(), 2.into()); // need 2 badges to take everything
