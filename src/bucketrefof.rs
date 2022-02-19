@@ -1,4 +1,4 @@
-use std::cell::{RefCell};
+use std::cell::RefCell;
 use std::marker::PhantomData;
 
 use scrypto::prelude::*;
@@ -9,14 +9,14 @@ use crate::resourceof::ResourceOf;
 #[cfg(feature = "runtime_typechecks")]
 use crate::runtime::runtimechecks;
 
-//impl_wrapper_struct!(BucketRefOf<RES>, BucketRef); // can't use this with Drop, so instead custom implementation below
+// impl_wrapper_struct!(BucketRefOf<RES>, BucketRef); // can't use this with Drop, so instead custom implementation below
 impl_wrapper_common!(BucketRefOf<RES>, BucketRef); // still want the common implementation
 
 // custom BucketRefOf using RefCell so we can implement Drop
 #[derive(Debug)]
 pub struct BucketRefOf<RES: Resource> {
     inner: RefCell<Option<BucketRef>>,
-    phantom: PhantomData<RES>
+    phantom: PhantomData<RES>,
 }
 
 // the "standard" impl and traits (but we may not have Decode, and we always have a custom Encode)
@@ -24,10 +24,8 @@ impl_SBOR_traits_without_Encode_Decode!(BucketRefOf<RES>, BucketRef);
 #[cfg(feature = "runtime_typechecks")]
 impl_SBOR_Decode!(BucketRefOf<RES>, BucketRef);
 
-
 impl SBORable for BucketRef {}
 impl Container for BucketRef {}
-
 
 // required for impl_SBOR_traits! and used in forwarder (impl this or impl Deref but not both)
 impl<RES: Resource> WithInner<BucketRef> for BucketRefOf<RES> {
@@ -54,7 +52,8 @@ impl<RES: runtimechecks::Resource> From<BucketRef> for BucketRefOf<RES> {
             // not sure a better error here as with BucketOf and VaultOf
             panic!("BucketRef mismatch");
         }
-        if bucketref.amount() <= 0.into() { // check() and contains() both check the amount, choosing to keep these semantics
+        if bucketref.amount() <= 0.into() {
+            // check() and contains() both check the amount, choosing to keep these semantics
             panic!("Will not create empty BucketRefOf");
         }
         UncheckedIntoBucketRefOf::unchecked_into(bucketref)
@@ -69,7 +68,7 @@ impl<RES: Resource> From<BucketRef> for BucketRefOf<RES> {
     #[inline(always)]
     fn from(_inner: BucketRef) -> Self {
         panic!("Unsafe creation of BucketRefOf from BucketRef.  Enable scrypto_statictypes/runtime_typechecks or use .unchecked_into()");
-        //UncheckedIntoBucketRefOf::unchecked_into(inner)
+        // UncheckedIntoBucketRefOf::unchecked_into(inner)
     }
 }
 
@@ -93,7 +92,7 @@ impl<RES: Resource> UncheckedIntoBucketRefOf<RES> for BucketRef {
     fn unchecked_into(self) -> BucketRefOf<RES> {
         BucketRefOf::<RES> {
             inner: RefCell::new(Some(self)),
-            phantom: PhantomData::<RES>
+            phantom: PhantomData::<RES>,
         }
     }
 }
@@ -165,15 +164,15 @@ impl<RES: Resource> BucketRefOf<RES> {
 
 // custom Encode that takes the value so it can't be dropped twice (semantics are Encode should own/move the BucketRef)
 impl<RES: Resource> sbor::Encode for BucketRefOf<RES>
-    where BucketRefOf<RES>: WithInner<BucketRef>
+where BucketRefOf<RES>: WithInner<BucketRef>
 {
     // Encode
     #[inline(always)]
     fn encode_value(&self, encoder: &mut sbor::Encoder) {
-        //self.with_inner(|inner| <$t as sbor::Encode>::encode_value(inner, encoder))
+        // self.with_inner(|inner| <$t as sbor::Encode>::encode_value(inner, encoder))
         let br: BucketRef = self.inner.borrow_mut().take().unwrap(); // take so the Drop trait can't drop the BucketRef
         debug!("Encode BucketRefOf {:?}", br);
         <BucketRef as sbor::Encode>::encode_value(&br, encoder) // encode here
-        // let BucketRef go out of scope (it doesn't have Drop)
+                                                                // let BucketRef go out of scope (it doesn't have Drop)
     }
 }

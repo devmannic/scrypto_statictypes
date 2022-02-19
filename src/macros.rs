@@ -1,4 +1,6 @@
-pub use crate::internal::{Address, ResourceDecl as StaticResourceDecl, Resource as StaticResource};
+pub use crate::internal::{
+    Address, Resource as StaticResource, ResourceDecl as StaticResourceDecl,
+};
 
 #[macro_export]
 macro_rules! declare_resource {
@@ -16,7 +18,8 @@ macro_rules! declare_resource {
     };
     ( $x:ident ) => {
         #[derive(Debug)]
-        #[allow(non_camel_case_types)] pub enum $x {}
+        #[allow(non_camel_case_types)]
+        pub enum $x {}
         impl StaticResource for $x {}
         impl StaticResourceDecl for $x {
             const ADDRESS: Option<Address> = None;
@@ -24,7 +27,8 @@ macro_rules! declare_resource {
     };
     ( $x:ident, $e:expr  ) => {
         #[derive(Debug)]
-        #[allow(non_camel_case_types)] pub enum $x {}
+        #[allow(non_camel_case_types)]
+        pub enum $x {}
         impl StaticResource for $x {}
         impl StaticResourceDecl for $x {
             const ADDRESS: Option<Address> = Some($e);

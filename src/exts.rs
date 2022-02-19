@@ -1,6 +1,6 @@
+use crate::bucketof::*;
 /// DepositOf and WithdrawOf
 use crate::internal::*;
-use crate::bucketof::*;
 use crate::resourceof::*;
 use scrypto::prelude::{
     call_method, scrypto_decode, scrypto_encode, scrypto_unwrap, Bucket, Decimal, ResourceDef,
@@ -23,7 +23,6 @@ impl Account {
     }
 }
 
-//
 // Deposit
 //
 
@@ -43,10 +42,11 @@ impl Deposit for Account {
 }
 
 pub trait DepositOf
-    where Self: Deposit
+where Self: Deposit
 {
     #[inline(always)]
-    fn deposit_of<RHS: Resource>(&self, bucket: BucketOf<RHS>) // RHS allows for specifying the resource with the function, or eliding it with the correct BucketOf
+    fn deposit_of<RHS: Resource>(&self, bucket: BucketOf<RHS>)
+    // RHS allows for specifying the resource with the function, or eliding it with the correct BucketOf
     {
         <Self as Deposit>::deposit(self, bucket.unwrap())
     }
@@ -54,17 +54,15 @@ pub trait DepositOf
 
 /// Explicitly requires deposit_of::<RES> syntax instead of of automatically allowing any BucketOf<_> parameter
 pub trait DepositOfExplicit<RES: Resource>
-    where Self: Deposit
+where Self: Deposit
 {
     #[inline(always)]
     fn deposit_of<RHS: Resource>(&self, bucket: BucketOf<RES>)
-    where RHS: ResourceIs<RES>
-    {
+    where RHS: ResourceIs<RES> {
         <Self as Deposit>::deposit(self, bucket.unwrap())
     }
 }
 
-//
 // Withdraw
 //
 
@@ -85,21 +83,27 @@ impl Withdraw for Account {
 }
 
 pub trait WithdrawOf
-    where Self: Withdraw
+where Self: Withdraw
 {
     #[cfg(feature = "runtime_typechecks")]
     #[inline(always)]
     // RHS allows for specifying the resource with the function, or eliding it with the correct ResourceOf
-    fn withdraw_of<RHS: runtimechecks::Resource>(&self, amount: Decimal, resource_of: ResourceOf<RHS>) -> BucketOf<RHS>
-    {
+    fn withdraw_of<RHS: runtimechecks::Resource>(
+        &self,
+        amount: Decimal,
+        resource_of: ResourceOf<RHS>,
+    ) -> BucketOf<RHS> {
         <Self as Withdraw>::withdraw(self, amount, resource_of).into() // do checked into here since external method call could return any type of bucket
     }
 
     #[cfg(not(feature = "runtime_typechecks"))]
     #[inline(always)]
     // RHS allows for specifying the resource with the function, or eliding it with the correct ResourceOf
-    fn withdraw_of<RHS: ResourceDecl>(&self, amount: Decimal, resource_of: ResourceOf<RHS>) -> BucketOf<RHS>
-    {
+    fn withdraw_of<RHS: ResourceDecl>(
+        &self,
+        amount: Decimal,
+        resource_of: ResourceOf<RHS>,
+    ) -> BucketOf<RHS> {
         <Self as Withdraw>::withdraw(self, amount, resource_of).into() // do checked into here since external method call could return any type of bucket
     }
 }
@@ -107,11 +111,16 @@ pub trait WithdrawOf
 #[cfg(not(feature = "runtime_typechecks"))]
 /// Explicitly requires withdraw_of::<RES> syntax instead of of automatically allowing any ResourceOf<_> parameter
 pub trait WithdrawOfExplicit<RES: ResourceDecl>
-    where Self: Withdraw
+where Self: Withdraw
 {
     #[inline(always)]
-    fn withdraw_of<RHS: ResourceDecl>(&self, amount: Decimal, resource_of: ResourceOf<RES>) -> BucketOf<RES>
-    where RHS: ResourceIs<RES>
+    fn withdraw_of<RHS: ResourceDecl>(
+        &self,
+        amount: Decimal,
+        resource_of: ResourceOf<RES>,
+    ) -> BucketOf<RES>
+    where
+        RHS: ResourceIs<RES>,
     {
         <Self as Withdraw>::withdraw(self, amount, resource_of).into() // do checked into here since external method call could return any type of bucket
     }
@@ -120,11 +129,16 @@ pub trait WithdrawOfExplicit<RES: ResourceDecl>
 #[cfg(feature = "runtime_typechecks")]
 /// Explicitly requires withdraw_of::<RES> syntax instead of of automatically allowing any ResourceOf<_> parameter
 pub trait WithdrawOfExplicit<RES: runtimechecks::Resource>
-    where Self: Withdraw
+where Self: Withdraw
 {
     #[inline(always)]
-    fn withdraw_of<RHS: runtimechecks::Resource>(&self, amount: Decimal, resource_of: ResourceOf<RES>) -> BucketOf<RES>
-    where RHS: ResourceIs<RES>
+    fn withdraw_of<RHS: runtimechecks::Resource>(
+        &self,
+        amount: Decimal,
+        resource_of: ResourceOf<RES>,
+    ) -> BucketOf<RES>
+    where
+        RHS: ResourceIs<RES>,
     {
         <Self as Withdraw>::withdraw(self, amount, resource_of).into() // do checked into here since external method call could return any type of bucket
     }
@@ -134,7 +148,7 @@ pub trait WithdrawOfExplicit<RES: runtimechecks::Resource>
 
 // impl DepositOf for Account {} // prefer Explicit, TODO make this configurable with feature flag?
 impl<RES: Resource> DepositOfExplicit<RES> for Account {}
-//impl WithdrawOf for Account {} // prefer Explicit, TODO make this configurable with feature flag?
+// impl WithdrawOf for Account {} // prefer Explicit, TODO make this configurable with feature flag?
 #[cfg(not(feature = "runtime_typechecks"))]
 impl<RES: ResourceDecl> WithdrawOfExplicit<RES> for Account {}
 #[cfg(feature = "runtime_typechecks")]

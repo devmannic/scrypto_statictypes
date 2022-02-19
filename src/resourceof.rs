@@ -1,8 +1,8 @@
 use scrypto::prelude::*;
 
-use crate::internal::*;
 use crate::bucketof::BucketOf;
 use crate::bucketrefof::*;
+use crate::internal::*;
 
 #[cfg(feature = "runtime_typechecks")]
 use crate::runtime::runtimechecks;
@@ -15,14 +15,25 @@ impl Container for ResourceDef {}
 impl<RES: Resource> ResourceOf<RES> {
     /// Mints fungible resources
     #[inline(always)]
-    pub fn mint<T: Into<Decimal>, AUTH: Resource>(&self, amount: T, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
+    pub fn mint<T: Into<Decimal>, AUTH: Resource>(
+        &self,
+        amount: T,
+        auth: BucketRefOf<AUTH>,
+    ) -> BucketOf<RES> {
         self.inner.mint(amount, auth.unwrap()).unchecked_into()
     }
 
     /// Mints non-fungible resources
     #[inline(always)]
-    pub fn mint_nft<T: NftData, AUTH: Resource>(&self, id: u128, data: T, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
-        self.inner.mint_nft(id, data, auth.unwrap()).unchecked_into()
+    pub fn mint_nft<T: NftData, AUTH: Resource>(
+        &self,
+        id: u128,
+        data: T,
+        auth: BucketRefOf<AUTH>,
+    ) -> BucketOf<RES> {
+        self.inner
+            .mint_nft(id, data, auth.unwrap())
+            .unchecked_into()
     }
 
     /// Burns a bucket of resources.
