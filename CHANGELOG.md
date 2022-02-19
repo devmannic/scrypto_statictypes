@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [0.3.1] - 2022-02-19
 ### Added
 - Common impl for From<$w> for $t to automatically unwrap making API usage cleaner
 - `Account::deposit_of::<RESOURCE>` and `Account::withdraw_of::<RESOURCE>`
