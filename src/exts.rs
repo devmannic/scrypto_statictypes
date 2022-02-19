@@ -2,7 +2,9 @@
 use crate::internal::*;
 use crate::bucketof::*;
 use crate::resourceof::*;
-use scrypto::prelude::{Bucket, Account, Decimal, ResourceDef, scrypto_encode, scrypto_decode, call_method, scrypto_unwrap};
+use scrypto::prelude::{
+    call_method, scrypto_decode, scrypto_encode, scrypto_unwrap, Bucket, Decimal, ResourceDef,
+};
 
 #[cfg(feature = "runtime_typechecks")]
 use crate::runtime::runtimechecks;
@@ -11,6 +13,15 @@ use crate::runtime::runtimechecks;
 pub trait ResourceIs<RES: Resource> {}
 impl<RES: Resource> ResourceIs<RES> for RES {}
 
+/// Proxy for an Account taking the place of the removed scrypto::core::Account API
+struct Account {
+    component: Address,
+}
+impl Account {
+    fn address(&self) -> Address {
+        self.component
+    }
+}
 
 //
 // Deposit
@@ -22,7 +33,12 @@ pub trait Deposit {
 impl Deposit for Account {
     #[inline(always)]
     fn deposit(&self, bucket: Bucket) {
-        Account::deposit(self, bucket)
+        // Account::deposit(self, bucket)
+        // Account API removed in Scrypto v0.3.0, use this
+        // dynamic implementation instead
+        let args = vec![scrypto_encode(&bucket)];
+        let rtn = call_method(self.address(), "deposit", args);
+        scrypto_unwrap(scrypto_decode(&rtn))
     }
 }
 
