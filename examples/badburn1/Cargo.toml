@@ -1,15 +1,15 @@
 [package]
 name = "badburn1"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 [dependencies]
-sbor = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.2.0" }
-scrypto = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.2.0" }
+sbor = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.3.0" }
+scrypto = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.3.0" }
 scrypto_statictypes = { path = "../../" }
 
 [dev-dependencies]
-radix-engine = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.2.0" }
+radix-engine = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.3.0" }
 
 [profile.release]
 opt-level = 's'     # Optimize for size.

@@ -16,7 +16,7 @@ blueprint! {
             // create 1 minter badge for 2 resources, FLAM and INFLAM
             let owner = ResourceBuilder::new_fungible(DIVISIBILITY_NONE).initial_supply_fungible(1);
             // create FLAM and mint 1000
-            let flammable_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
+            let mut flammable_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
                 .metadata("name", "BurnMe")
                 .metadata("symbol", "FLAM")
                 .flags(MINTABLE | BURNABLE)
@@ -43,7 +43,7 @@ blueprint! {
         }
 
         #[auth(auth_def)]
-        pub fn burn_it(&mut self, incoming: Bucket) -> Bucket {
+        pub fn burn_it(&mut self, mut incoming: Bucket) -> Bucket {
             // burn all but 5, give back same amount of inflam
             if incoming.amount() > 5.into() {
                 self.flam_vault.put(incoming.take(5));
