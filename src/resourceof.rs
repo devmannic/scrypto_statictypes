@@ -25,14 +25,14 @@ impl<RES: Resource> ResourceOf<RES> {
 
     /// Mints non-fungible resources
     #[inline(always)]
-    pub fn mint_nft<T: NftData, AUTH: Resource>(
-        &self,
-        id: u128,
+    pub fn mint_non_fungible<T: NonFungibleData, AUTH: Resource>(
+        &mut self,
+        key: &NonFungibleKey,
         data: T,
         auth: BucketRefOf<AUTH>,
     ) -> BucketOf<RES> {
         self.inner
-            .mint_nft(id, data, auth.unwrap())
+            .mint_non_fungible(key, data, auth.unwrap())
             .unchecked_into()
     }
 

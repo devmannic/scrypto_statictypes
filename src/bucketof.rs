@@ -78,13 +78,13 @@ impl<RES: Resource> BucketOf<RES> {
         f(self.present())
     }
 
-    /// Takes an NFT from this bucket, by id.
+    /// Takes a non-fungible from this bucket, by key.
     ///
     /// # Panics
-    /// Panics if this is not an NFT bucket or the specified NFT is not found.
+    /// Panics if this is not a non-fungible bucket or the specified non-fungible resource is not found.
     #[inline(always)]
-    pub fn take_nft(&self, id: u128) -> BucketOf<RES> {
-        self.inner.take_nft(id).unchecked_into()
+    pub fn take_non_fungible(&mut self, key: &NonFungibleKey) -> BucketOf<RES> {
+        self.inner.take_non_fungible(key).unchecked_into()
     }
 }
 

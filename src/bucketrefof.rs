@@ -137,16 +137,22 @@ impl<RES: Resource> BucketRefOf<RES> {
         self.with_inner(|inner| inner.resource_address())
     }
 
-    /// Get the NFT ids in the referenced bucket.
+    /// Returns the key of a singleton non-fungible.
+    ///
+    /// # Panic
+    /// If the bucket is empty or contains more than one non-fungibles.
     #[inline(always)]
-    pub fn get_nft_ids(&self) -> Vec<u128> {
-        self.with_inner(|inner| inner.get_nft_ids())
+    pub fn get_non_fungible_key(&self) -> NonFungibleKey {
+        self.with_inner(|inner| inner.get_non_fungible_key())
     }
 
-    /// Get the NFT id and panic if not singleton.
+    /// Returns the keys of all non-fungibles in this bucket.
+    ///
+    /// # Panics
+    /// If the bucket is not a non-fungible bucket.
     #[inline(always)]
-    pub fn get_nft_id(&self) -> u128 {
-        self.with_inner(|inner| inner.get_nft_id())
+    pub fn get_non_fungible_keys(&self) -> Vec<NonFungibleKey> {
+        self.with_inner(|inner| inner.get_non_fungible_keys())
     }
 
     /// Destroys this reference.

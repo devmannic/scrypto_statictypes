@@ -81,28 +81,26 @@ impl<RES: Resource> VaultOf<RES> {
             .unchecked_into()
     }
 
-    /// Takes an NFT from this vault, by id.
+    /// Takes a non-fungible from this vault, by id.
     ///
     /// # Panics
-    /// Panics if this is not an NFT vault or the specified NFT is not found.
-    pub fn take_nft(&self, id: u128) -> BucketOf<RES> {
-        self.inner.take_nft(id).unchecked_into()
+    /// Panics if this is not a non-fungible vault or the specified non-fungible is not found.
+    #[inline(always)]
+    pub fn take_non_fungible(&self, key: &NonFungibleKey) -> BucketOf<RES> {
+        self.inner.take_non_fungible(key).unchecked_into()
     }
 
-    /// Takes an NFT from this vault, by id.
+    /// Takes a non-fungible from this vault, by id.
     ///
-    /// This variant of `take_nft` accepts an additional auth parameter to support resources
+    /// This variant of `take_non_fungible` accepts an additional auth parameter to support resources
     /// with or without `RESTRICTED_TRANSFER` flag on.
     ///
     /// # Panics
-    /// Panics if this is not an NFT vault or the specified NFT is not found.
-    pub fn take_nft_with_auth<AUTH: Resource>(
-        &self,
-        id: u128,
-        auth: BucketRefOf<AUTH>,
-    ) -> BucketOf<RES> {
+    /// Panics if this is not a non-fungible vault or the specified non-fungible is not found.
+    #[inline(always)]
+    pub fn take_non_fungible_with_auth<AUTH: Resource>(&self, key: &NonFungibleKey, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
         self.inner
-            .take_nft_with_auth(id, auth.unwrap())
+            .take_non_fungible_with_auth(key, auth.unwrap())
             .unchecked_into()
     }
 
