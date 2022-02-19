@@ -36,14 +36,14 @@ impl<RES: Resource> VaultOf<RES> {
 
     /// Puts a typed bucket of resources into this vault.
     #[inline(always)]
-    pub fn put(&self, other: BucketOf<RES>) {
+    pub fn put(&mut self, other: BucketOf<RES>) {
         // self.vault.put(other.into()) // extra check
         self.inner.put(other.inner) // no extra check
     }
 
     /// Takes some amount of resources out of this vault, with typed result.
     #[inline(always)]
-    pub fn take<A: Into<Decimal>>(&self, amount: A) -> BucketOf<RES> {
+    pub fn take<A: Into<Decimal>>(&mut self, amount: A) -> BucketOf<RES> {
         // self.vault.take(amount).into() // extra check
         self.inner.take(amount).unchecked_into() // no extra check
     }
@@ -54,7 +54,7 @@ impl<RES: Resource> VaultOf<RES> {
     /// with or without `RESTRICTED_TRANSFER` flag on.
     #[inline(always)]
     pub fn take_with_auth<A: Into<Decimal>, AUTH: Resource>(
-        &self,
+        &mut self,
         amount: A,
         auth: BucketRefOf<AUTH>,
     ) -> BucketOf<RES> {
@@ -65,7 +65,7 @@ impl<RES: Resource> VaultOf<RES> {
 
     /// Takes all resourced stored in this vault, with typed result.
     #[inline(always)]
-    pub fn take_all(&self) -> BucketOf<RES> {
+    pub fn take_all(&mut self) -> BucketOf<RES> {
         // self.vault.take_all().into() // extra check
         self.inner.take_all().unchecked_into() // no extra check
     }
@@ -75,7 +75,7 @@ impl<RES: Resource> VaultOf<RES> {
     /// This variant of `take_all` accepts an additional auth parameter to support resources
     /// with or without `RESTRICTED_TRANSFER` flag on.
     #[inline(always)]
-    pub fn take_all_with_auth<AUTH: Resource>(&self, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
+    pub fn take_all_with_auth<AUTH: Resource>(&mut self, auth: BucketRefOf<AUTH>) -> BucketOf<RES> {
         self.inner
             .take_all_with_auth(auth.unwrap())
             .unchecked_into()
@@ -117,7 +117,7 @@ impl<RES: Resource> VaultOf<RES> {
     /// 2. Creates a `BucketRef`.
     /// 3. Applies the specified function `f` with the created bucket reference;
     /// 4. Puts the `1` resource back into this vault.
-    pub fn authorize<F: FnOnce(BucketRefOf<RES>) -> O, O>(&self, f: F) -> O {
+    pub fn authorize<F: FnOnce(BucketRefOf<RES>) -> O, O>(&mut self, f: F) -> O {
         let bucket = self.take(1);
         let output = f(bucket.present());
         self.put(bucket);
@@ -135,7 +135,7 @@ impl<RES: Resource> VaultOf<RES> {
     /// This variant of `authorize` accepts an additional auth parameter to support resources
     /// with or without `RESTRICTED_TRANSFER` flag on.
     pub fn authorize_with_auth<F: FnOnce(BucketRefOf<RES>) -> O, O, AUTH: Resource>(
-        &self,
+        &mut self,
         f: F,
         auth: BucketRefOf<AUTH>,
     ) -> O {
@@ -151,9 +151,9 @@ impl<RES: Resource> VaultOf<RES> {
 impl<RES: runtimechecks::Resource> From<Vault> for VaultOf<RES> {
     fn from(vault: Vault) -> Self {
         if !runtimechecks::check_address::<RES>(vault.resource_address()) {
-            let tmp_bucket =
-                ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM).initial_supply_fungible(1);
-            vault.put(tmp_bucket); // this will trigger resource def mismatch error error: Err(InvokeError(Trap(Trap { kind: Host(VaultError(AccountingError(MismatchingResourceDef))) })))
+            // let tmp_bucket =
+            //     ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM).initial_supply_fungible(1);
+            // vault.put(tmp_bucket); // this will trigger resource def mismatch error error: Err(InvokeError(Trap(Trap { kind: Host(VaultError(AccountingError(MismatchingResourceDef))) })))
                                    // shouldn't get here, but just in case (and to help the compiler)
             panic!("VaultOf mismatch");
         }

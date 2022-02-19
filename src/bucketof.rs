@@ -35,13 +35,13 @@ impl<RES: ResourceDecl> BucketOf<RES> {
 impl<RES: Resource> BucketOf<RES> {
     /// Puts resources from another bucket into this bucket.
     #[inline(always)]
-    pub fn put(&self, other: Self) {
+    pub fn put(&mut self, other: Self) {
         self.inner.put(other.inner)
     }
 
     /// Takes some amount of resources from this bucket.
     #[inline(always)]
-    pub fn take<A: Into<Decimal>>(&self, amount: A) -> Self {
+    pub fn take<A: Into<Decimal>>(&mut self, amount: A) -> Self {
         self.inner.take(amount).unchecked_into()
     }
 
@@ -92,9 +92,9 @@ impl<RES: Resource> BucketOf<RES> {
 impl<RES: runtimechecks::Resource> From<Bucket> for BucketOf<RES> {
     fn from(bucket: Bucket) -> Self {
         if !runtimechecks::check_address::<RES>(bucket.resource_address()) {
-            let tmp_bucket =
-                ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM).initial_supply_fungible(1);
-            bucket.put(tmp_bucket); // this will trigger resource def mismatch error: Err(InvokeError(Trap(Trap { kind: Host(BucketError(MismatchingResourceDef)) })))
+            // let tmp_bucket =
+            //     ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM).initial_supply_fungible(1);
+            // bucket.put(tmp_bucket); // this will trigger resource def mismatch error: Err(InvokeError(Trap(Trap { kind: Host(BucketError(MismatchingResourceDef)) })))
                                     // shouldn't get here, but just in case (and to help the compiler)
             panic!("BucketOf mismatch");
         }

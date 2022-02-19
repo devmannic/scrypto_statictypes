@@ -16,7 +16,7 @@ impl<RES: Resource> ResourceOf<RES> {
     /// Mints fungible resources
     #[inline(always)]
     pub fn mint<T: Into<Decimal>, AUTH: Resource>(
-        &self,
+        &mut self,
         amount: T,
         auth: BucketRefOf<AUTH>,
     ) -> BucketOf<RES> {
@@ -38,13 +38,13 @@ impl<RES: Resource> ResourceOf<RES> {
 
     /// Burns a bucket of resources.
     #[inline(always)]
-    pub fn burn(&self, bucket: BucketOf<RES>) {
+    pub fn burn(&mut self, bucket: BucketOf<RES>) {
         self.inner.burn(bucket.inner)
     }
 
     /// Burns a bucket of resources.
     #[inline(always)]
-    pub fn burn_with_auth<AUTH: Resource>(&self, bucket: BucketOf<RES>, auth: BucketRefOf<AUTH>) {
+    pub fn burn_with_auth<AUTH: Resource>(&mut self, bucket: BucketOf<RES>, auth: BucketRefOf<AUTH>) {
         self.inner.burn_with_auth(bucket.inner, auth.unwrap())
     }
 }
