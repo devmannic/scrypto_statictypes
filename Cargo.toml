@@ -1,6 +1,6 @@
 [package]
 name = "scrypto_statictypes"
-version = "0.3.1"
+version = "0.4.0"
 rust-version = "1.56"
 authors = ["devmannic <82296715+devmannic@users.noreply.github.com>"]
 license = "MIT OR Apache-2.0"
@@ -39,11 +39,11 @@ nightly = [] # enables optimizations or features requiring nightly rust
 runtime_typechecks = []
 
 [dependencies]
-sbor = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.2.0" }
-scrypto = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.2.0" }
+sbor = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.3.0" }
+scrypto = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.3.0" }
 
 [dev-dependencies]
-radix-engine = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.2.0" }
+radix-engine = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.3.0" }
 
 [profile.release]
 opt-level = 's'     # Optimize for size.

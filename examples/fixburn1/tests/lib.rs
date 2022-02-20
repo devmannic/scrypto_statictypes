@@ -11,22 +11,21 @@ const RUNTIME_CHECKS: bool = false;
 #[test]
 fn test_burn_it() {
     // Set up environment.
-    let mut ledger = InMemoryLedger::with_bootstrap();
-    let mut executor = TransactionExecutor::new(&mut ledger, 0, 0);
+    let mut ledger = InMemorySubstateStore::with_bootstrap();
+    let mut executor = TransactionExecutor::new(&mut ledger, true);
     let key = executor.new_public_key();
     let account = executor.new_account(key);
-    let package = executor.publish_package(include_code!("out"));
+    let package = executor.publish_package(include_code!("out")).unwrap();
 
     // Test the `new` function.
     let transaction = TransactionBuilder::new(&executor)
         .call_function(package, "FixBurn", "new", vec![], None)
-        .drop_all_bucket_refs()
-        .deposit_all_buckets(account) // needed when returning a bucket
+        .call_method_with_all_resources(account, "deposit_batch")
         .build(vec![key])
         .unwrap();
-    let receipt = executor.run(transaction, true).unwrap();
+    let receipt = executor.run(transaction).unwrap();
     println!("{:?}\n", receipt);
-    assert!(receipt.success);
+    assert!(receipt.result.is_ok());
 
     // Test the `burn_it` method.
     let component_addr = receipt.component(0).unwrap();
@@ -41,13 +40,12 @@ fn test_burn_it() {
             vec![format!("100,{}", flam_addr), format!("1,{}", auth_addr)],
             Some(account),
         )
-        .drop_all_bucket_refs()
-        .deposit_all_buckets(account)
+        .call_method_with_all_resources(account, "deposit_batch")
         .build(vec![key])
         .unwrap();
-    let receipt = executor.run(transaction, true).unwrap();
+    let receipt = executor.run(transaction).unwrap();
     println!("{:?}\n", receipt);
-    assert!(receipt.success);
+    assert!(receipt.result.is_ok());
 
     // Test the `burn_it` method < 5
     let transaction = TransactionBuilder::new(&executor)
@@ -57,13 +55,12 @@ fn test_burn_it() {
             vec![format!("3,{}", flam_addr), format!("1,{}", auth_addr)],
             Some(account),
         )
-        .drop_all_bucket_refs()
-        .deposit_all_buckets(account)
+        .call_method_with_all_resources(account, "deposit_batch")
         .build(vec![key])
         .unwrap();
-    let receipt = executor.run(transaction, true).unwrap();
+    let receipt = executor.run(transaction).unwrap();
     println!("{:?}\n", receipt);
-    assert!(receipt.success);
+    assert!(receipt.result.is_ok());
 
     // Test the `burn_it` method of the WRONG TYPE (use INFLAM)
     // it will FAIL beacuse of the type mismatch on the line: self.flam_vault.put(incoming.take(5));
@@ -77,13 +74,12 @@ fn test_burn_it() {
             ],
             Some(account),
         )
-        .drop_all_bucket_refs()
-        .deposit_all_buckets(account)
+        .call_method_with_all_resources(account, "deposit_batch")
         .build(vec![key])
         .unwrap();
-    let receipt = executor.run(transaction, true).unwrap();
+    let receipt = executor.run(transaction).unwrap();
     println!("{:?}\n", receipt);
-    assert!(!receipt.success);
+    assert!(!receipt.result.is_ok());
 
     // Test the `burn_it` method < 5 of the WRONG TYPE (use INFLAM)
     // it will also fail (now that we use scrypto_statictypes with the runtime_typechecks enabled !!!)
@@ -97,18 +93,17 @@ fn test_burn_it() {
             ],
             Some(account),
         )
-        .drop_all_bucket_refs()
-        .deposit_all_buckets(account)
+        .call_method_with_all_resources(account, "deposit_batch")
         .build(vec![key])
         .unwrap();
-    let receipt = executor.run(transaction, true).unwrap();
+    let receipt = executor.run(transaction).unwrap();
     println!("{:?}\n", receipt);
     if RUNTIME_CHECKS {
         println!("RUNTIME_CHECKS ARE ON");
-        assert!(!receipt.success);
+        assert!(!receipt.result.is_ok());
     } else {
         println!("RUNTIME_CHECKS ARE OFF");
-        assert!(receipt.success); // would succeed without runtime checks
+        assert!(receipt.result.is_ok()); // would succeed without runtime checks
     }
 
 
@@ -123,16 +118,15 @@ fn test_burn_it() {
             ],
             Some(account),
         )
-        .drop_all_bucket_refs()
-        .deposit_all_buckets(account)
+        .call_method_with_all_resources(account, "deposit_batch")
         .build(vec![key])
         .unwrap();
-    let receipt = executor.run(transaction, true).unwrap();
+    let receipt = executor.run(transaction).unwrap();
     println!("{:?}\n", receipt);
     if RUNTIME_CHECKS {
-        assert!(!receipt.success);
+        assert!(!receipt.result.is_ok());
     } else {
-        assert!(!receipt.success); // would still fail, because cannot Decode BucketRefOf
+        assert!(!receipt.result.is_ok()); // would still fail, because cannot Decode BucketRefOf
     }
 
     // Again but bad auth with empty BucketRef but correct address
@@ -146,16 +140,15 @@ fn test_burn_it() {
             ],
             Some(account),
         )
-        .drop_all_bucket_refs()
-        .deposit_all_buckets(account)
+        .call_method_with_all_resources(account, "deposit_batch")
         .build(vec![key])
         .unwrap();
-    let receipt = executor.run(transaction, true).unwrap();
+    let receipt = executor.run(transaction).unwrap();
     println!("{:?}\n", receipt);
     if RUNTIME_CHECKS {
-        assert!(!receipt.success);
+        assert!(!receipt.result.is_ok());
     } else {
-        assert!(!receipt.success); // would still fail, because cannot Decode BucketRefOf
+        assert!(!receipt.result.is_ok()); // would still fail, because cannot Decode BucketRefOf
     }
 
     // Again but bad auth with not enough in  BucketRef but correct address
@@ -169,16 +162,15 @@ fn test_burn_it() {
             ],
             Some(account),
         )
-        .drop_all_bucket_refs()
-        .deposit_all_buckets(account)
+        .call_method_with_all_resources(account, "deposit_batch")
         .build(vec![key])
         .unwrap();
-    let receipt = executor.run(transaction, true).unwrap();
+    let receipt = executor.run(transaction).unwrap();
     println!("{:?}\n", receipt);
     if RUNTIME_CHECKS {
-        assert!(!receipt.success);
+        assert!(!receipt.result.is_ok());
     } else {
-        assert!(!receipt.success); // would still fail, because cannot Decode BucketRefOf
+        assert!(!receipt.result.is_ok()); // would still fail, because cannot Decode BucketRefOf
     }
 
     // Again but correct
@@ -192,15 +184,14 @@ fn test_burn_it() {
             ],
             Some(account),
         )
-        .drop_all_bucket_refs()
-        .deposit_all_buckets(account)
+        .call_method_with_all_resources(account, "deposit_batch")
         .build(vec![key])
         .unwrap();
-    let receipt = executor.run(transaction, true).unwrap();
+    let receipt = executor.run(transaction).unwrap();
     println!("{:?}\n", receipt);
     if RUNTIME_CHECKS {
-        assert!(receipt.success); // correct
+        assert!(receipt.result.is_ok()); // correct
     } else {
-        assert!(!receipt.success); // would fail, because cannot Decode BucketRefOf
+        assert!(!receipt.result.is_ok()); // would fail, because cannot Decode BucketRefOf
     }
 }

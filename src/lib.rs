@@ -1,7 +1,7 @@
 //! Use explicit container types with Scrypto!  Leverage the Rust compiler's type checking to increase security and productivity when developing Radix blueprints.
 //!
 //! A Scrypto (Rust) library for static types, featuring:
-//! 
+//!
 //! - A simple, usable, safe, and (by default) zero-cost API for compile-time
 //!     static type checking of resources.
 //! - Safe drop in replacements coexist with existing types.  Gradually apply these only where you need them:
@@ -126,19 +126,18 @@
 //!     }
 //! }
 //! ```
-//!
 pub mod prelude;
 
 mod bucketof;
-mod internal;
-mod runtime;
-mod vaultof;
-mod resourceof;
 mod bucketrefof;
 mod exts;
+mod internal;
+mod resourceof;
+mod runtime;
+mod vaultof;
 
 #[macro_use]
-mod  macros;
+mod macros;
 
 use scrypto::prelude::RADIX_TOKEN;
 

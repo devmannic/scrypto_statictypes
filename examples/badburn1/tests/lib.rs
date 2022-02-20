@@ -5,22 +5,21 @@ use scrypto::prelude::*;
 #[test]
 fn test_burn_it() {
     // Set up environment.
-    let mut ledger = InMemoryLedger::with_bootstrap();
-    let mut executor = TransactionExecutor::new(&mut ledger, 0, 0);
+    let mut ledger = InMemorySubstateStore::with_bootstrap();
+    let mut executor = TransactionExecutor::new(&mut ledger, true);
     let key = executor.new_public_key();
     let account = executor.new_account(key);
-    let package = executor.publish_package(include_code!("out"));
+    let package = executor.publish_package(include_code!("out")).unwrap();
 
     // Test the `new` function.
     let transaction = TransactionBuilder::new(&executor)
         .call_function(package, "BadBurn", "new", vec![], None)
-        .drop_all_bucket_refs()
-        .deposit_all_buckets(account) // needed when returning a bucket
+        .call_method_with_all_resources(account, "deposit_batch")
         .build(vec![key])
         .unwrap();
-    let receipt = executor.run(transaction, true).unwrap();
+    let receipt = executor.run(transaction).unwrap();
     println!("{:?}\n", receipt);
-    assert!(receipt.success);
+    assert!(receipt.result.is_ok());
 
     // Test the `burn_it` method.
     let component_addr = receipt.component(0).unwrap();
@@ -35,13 +34,12 @@ fn test_burn_it() {
             vec![format!("100,{}", flam_addr), format!("1,{}", auth_addr)],
             Some(account),
         )
-        .drop_all_bucket_refs()
-        .deposit_all_buckets(account)
+        .call_method_with_all_resources(account, "deposit_batch")
         .build(vec![key])
         .unwrap();
-    let receipt = executor.run(transaction, true).unwrap();
+    let receipt = executor.run(transaction).unwrap();
     println!("{:?}\n", receipt);
-    assert!(receipt.success);
+    assert!(receipt.result.is_ok());
 
     // Test the `burn_it` method < 5
     let transaction = TransactionBuilder::new(&executor)
@@ -51,13 +49,12 @@ fn test_burn_it() {
             vec![format!("3,{}", flam_addr), format!("1,{}", auth_addr)],
             Some(account),
         )
-        .drop_all_bucket_refs()
-        .deposit_all_buckets(account)
+        .call_method_with_all_resources(account, "deposit_batch")
         .build(vec![key])
         .unwrap();
-    let receipt = executor.run(transaction, true).unwrap();
+    let receipt = executor.run(transaction).unwrap();
     println!("{:?}\n", receipt);
-    assert!(receipt.success);
+    assert!(receipt.result.is_ok());
 
     // Test the `burn_it` method of the WRONG TYPE (use INFLAM)
     // it will FAIL beacuse of the type mismatch on the line: self.flam_vault.put(incoming.take(5));
@@ -71,13 +68,12 @@ fn test_burn_it() {
             ],
             Some(account),
         )
-        .drop_all_bucket_refs()
-        .deposit_all_buckets(account)
+        .call_method_with_all_resources(account, "deposit_batch")
         .build(vec![key])
         .unwrap();
-    let receipt = executor.run(transaction, true).unwrap();
+    let receipt = executor.run(transaction).unwrap();
     println!("{:?}\n", receipt);
-    assert!(!receipt.success);
+    assert!(!receipt.result.is_ok());
 
     // Test the `burn_it` method < 5 of the WRONG TYPE (use INFLAM)
     // it will succeed (oops)
@@ -91,11 +87,10 @@ fn test_burn_it() {
             ],
             Some(account),
         )
-        .drop_all_bucket_refs()
-        .deposit_all_buckets(account)
+        .call_method_with_all_resources(account, "deposit_batch")
         .build(vec![key])
         .unwrap();
-    let receipt = executor.run(transaction, true).unwrap();
+    let receipt = executor.run(transaction).unwrap();
     println!("{:?}\n", receipt);
-    assert!(receipt.success);
+    assert!(receipt.result.is_ok());
 }

@@ -1,15 +1,15 @@
 [package]
 name = "manyrefs"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 [dependencies]
-sbor = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.2.0"}
-scrypto = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.2.0"}
+sbor = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.3.0" }
+scrypto = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.3.0" }
 scrypto_statictypes = { path = "../../" }
 
 [dev-dependencies]
-radix-engine = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.2.0" }
+radix-engine = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.3.0" }
 
 [profile.release]
 opt-level = 's'     # Optimize for size.
@@ -25,8 +25,3 @@ default = ["scrypto_statictypes/runtime_typechecks"]
 
 [workspace]
 
-# temporary explicit patch because we need bugfix commit after v0.2.0 but it needs to apply to all dependencies so we don't get mismatches
-[patch."https://github.com/radixdlt/radixdlt-scrypto"]
-sbor = { git = "https://github.com/devmannic/radixdlt-scrypto", rev = "a890ba796b4091f5aeccaff4bbeb49e6f288218c" }
-scrypto = { git = "https://github.com/devmannic/radixdlt-scrypto", rev = "a890ba796b4091f5aeccaff4bbeb49e6f288218c" }
-radix-engine = { git = "https://github.com/devmannic/radixdlt-scrypto", rev = "a890ba796b4091f5aeccaff4bbeb49e6f288218c" }

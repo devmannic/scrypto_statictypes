@@ -1,4 +1,3 @@
-
 #[cfg(feature = "runtime_typechecks")]
 pub(crate) mod runtimechecks {
     use scrypto::prelude::{debug, error};
@@ -16,6 +15,7 @@ pub(crate) mod runtimechecks {
         fn index() -> AddressKey {
             std::any::TypeId::of::<T>()
         }
+
         #[inline(always)]
         fn address() -> Option<Address> {
             T::ADDRESS
@@ -84,7 +84,10 @@ pub(crate) mod runtimechecks {
             }
             None => {
                 let mut guard = singleton().inner.lock().unwrap();
-                let KnownAddresses{ref mut addresses, ref mut all_addresses} = &mut *guard;
+                let KnownAddresses {
+                    ref mut addresses,
+                    ref mut all_addresses,
+                } = &mut *guard;
                 let i = RES::index();
                 match addresses.entry(i) {
                     std::collections::hash_map::Entry::Occupied(o) => {

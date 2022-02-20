@@ -1,8 +1,8 @@
 use scrypto::prelude::*;
 
+use crate::bucketrefof::*;
 use crate::internal::*;
 use crate::resourceof::ResourceOf;
-use crate::bucketrefof::*;
 
 #[cfg(feature = "runtime_typechecks")]
 use crate::runtime::runtimechecks;
@@ -13,7 +13,8 @@ impl SBORable for Bucket {}
 impl Container for Bucket {}
 
 #[cfg(feature = "runtime_typechecks")]
-impl<RES: runtimechecks::Resource> BucketOf<RES> { // use of .into() when runtime_checks requires trait bound on runtimechecks::Resource because of From trait bound (so we need a different impl block)
+impl<RES: runtimechecks::Resource> BucketOf<RES> {
+    // use of .into() when runtime_checks requires trait bound on runtimechecks::Resource because of From trait bound (so we need a different impl block)
     /// Creates a new bucket to hold resources of the given definition.
     #[inline(always)]
     pub fn new<A: Into<ResourceDef>>(resource_def: A) -> Self {
@@ -22,7 +23,8 @@ impl<RES: runtimechecks::Resource> BucketOf<RES> { // use of .into() when runtim
 }
 
 #[cfg(not(feature = "runtime_typechecks"))]
-impl<RES: ResourceDecl> BucketOf<RES> { // use of .into() when not(runtime_checks) requires trait bound on ResourceDecl because of From trait bound (so we need a different impl block)
+impl<RES: ResourceDecl> BucketOf<RES> {
+    // use of .into() when not(runtime_checks) requires trait bound on ResourceDecl because of From trait bound (so we need a different impl block)
     /// Creates a new bucket to hold resources of the given definition.
     #[inline(always)]
     pub fn new<A: Into<ResourceDef>>(resource_def: A) -> Self {
@@ -33,13 +35,13 @@ impl<RES: ResourceDecl> BucketOf<RES> { // use of .into() when not(runtime_check
 impl<RES: Resource> BucketOf<RES> {
     /// Puts resources from another bucket into this bucket.
     #[inline(always)]
-    pub fn put(&self, other: Self) {
+    pub fn put(&mut self, other: Self) {
         self.inner.put(other.inner)
     }
 
     /// Takes some amount of resources from this bucket.
     #[inline(always)]
-    pub fn take<A: Into<Decimal>>(&self, amount: A) -> Self {
+    pub fn take<A: Into<Decimal>>(&mut self, amount: A) -> Self {
         self.inner.take(amount).unchecked_into()
     }
 
@@ -66,7 +68,7 @@ impl<RES: Resource> BucketOf<RES> {
     /// Creates an immutable reference to this bucket.
     #[inline(always)]
     pub fn present(&self) -> BucketRefOf<RES> {
-        //self.inner.present().unchecked_into()
+        // self.inner.present().unchecked_into()
         UncheckedIntoBucketRefOf::unchecked_into(self.inner.present())
     }
 
@@ -76,13 +78,13 @@ impl<RES: Resource> BucketOf<RES> {
         f(self.present())
     }
 
-    /// Takes an NFT from this bucket, by id.
+    /// Takes a non-fungible from this bucket, by key.
     ///
     /// # Panics
-    /// Panics if this is not an NFT bucket or the specified NFT is not found.
+    /// Panics if this is not a non-fungible bucket or the specified non-fungible resource is not found.
     #[inline(always)]
-    pub fn take_nft(&self, id: u128) -> BucketOf<RES> {
-        self.inner.take_nft(id).unchecked_into()
+    pub fn take_non_fungible(&mut self, key: &NonFungibleKey) -> BucketOf<RES> {
+        self.inner.take_non_fungible(key).unchecked_into()
     }
 }
 
@@ -90,8 +92,9 @@ impl<RES: Resource> BucketOf<RES> {
 impl<RES: runtimechecks::Resource> From<Bucket> for BucketOf<RES> {
     fn from(bucket: Bucket) -> Self {
         if !runtimechecks::check_address::<RES>(bucket.resource_address()) {
-            let tmp_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM).initial_supply_fungible(1);
-            bucket.put(tmp_bucket); // this will trigger resource def mismatch error: Err(InvokeError(Trap(Trap { kind: Host(BucketError(MismatchingResourceDef)) })))
+            // let tmp_bucket =
+            //     ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM).initial_supply_fungible(1);
+            // bucket.put(tmp_bucket); // this will trigger resource def mismatch error: Err(InvokeError(Trap(Trap { kind: Host(BucketError(MismatchingResourceDef)) })))
                                     // shouldn't get here, but just in case (and to help the compiler)
             panic!("BucketOf mismatch");
         }
