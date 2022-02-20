@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;vaultof.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>vaultof.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../scrypto_statictypes/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;vaultof.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>vaultof.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../scrypto_statictypes/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -144,12 +145,28 @@
 <span id="144">144</span>
 <span id="145">145</span>
 <span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">scrypto::prelude</span>::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::internal</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::bucketof::BucketOf</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::resourceof::ResourceOf</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::bucketrefof</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::internal</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::resourceof::ResourceOf</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime_typechecks&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::runtime::runtimechecks</span>;
@@ -160,7 +177,8 @@
 <span class="kw">impl</span> <span class="ident">Container</span> <span class="kw">for</span> <span class="ident">Vault</span> {}
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime_typechecks&quot;</span>)]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">RES</span>: <span class="ident">runtimechecks::Resource</span><span class="op">&gt;</span> <span class="ident">VaultOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> { <span class="comment">// runtime_checks requires trait bound on runtimechecks::Resource and use of .into() in new() may have runtime_checks (so we need a different impl block)</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">RES</span>: <span class="ident">runtimechecks::Resource</span><span class="op">&gt;</span> <span class="ident">VaultOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> {
+    <span class="comment">// runtime_checks requires trait bound on runtimechecks::Resource and use of .into() in new() may have runtime_checks (so we need a different impl block)</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">ResourceDef</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">resource_def</span>: <span class="ident">A</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">Vault::new</span>(<span class="ident">resource_def</span>).<span class="ident">into</span>()
@@ -181,15 +199,15 @@
 
     <span class="doccomment">/// Puts a typed bucket of resources into this vault.</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="ident">BucketOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span>) {
-        <span class="comment">//self.vault.put(other.into()) // extra check</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">put</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="ident">BucketOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span>) {
+        <span class="comment">// self.vault.put(other.into()) // extra check</span>
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">put</span>(<span class="ident">other</span>.<span class="ident">inner</span>) <span class="comment">// no extra check</span>
     }
 
     <span class="doccomment">/// Takes some amount of resources out of this vault, with typed result.</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Decimal</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">amount</span>: <span class="ident">A</span>) -&gt; <span class="ident">BucketOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> {
-        <span class="comment">//self.vault.take(amount).into() // extra check</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Decimal</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">amount</span>: <span class="ident">A</span>) -&gt; <span class="ident">BucketOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> {
+        <span class="comment">// self.vault.take(amount).into() // extra check</span>
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">take</span>(<span class="ident">amount</span>).<span class="ident">unchecked_into</span>() <span class="comment">// no extra check</span>
     }
 
@@ -198,14 +216,20 @@
     <span class="doccomment">/// This variant of `take` accepts an additional auth parameter to support resources</span>
     <span class="doccomment">/// with or without `RESTRICTED_TRANSFER` flag on.</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_with_auth</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Decimal</span><span class="op">&gt;</span>, <span class="ident">AUTH</span>: <span class="ident">Resource</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">amount</span>: <span class="ident">A</span>, <span class="ident">auth</span>: <span class="ident">BucketRefOf</span><span class="op">&lt;</span><span class="ident">AUTH</span><span class="op">&gt;</span>) -&gt; <span class="ident">BucketOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">take_with_auth</span>(<span class="ident">amount</span>, <span class="ident">auth</span>.<span class="ident">unwrap</span>()).<span class="ident">unchecked_into</span>()
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_with_auth</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Decimal</span><span class="op">&gt;</span>, <span class="ident">AUTH</span>: <span class="ident">Resource</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+        <span class="ident">amount</span>: <span class="ident">A</span>,
+        <span class="ident">auth</span>: <span class="ident">BucketRefOf</span><span class="op">&lt;</span><span class="ident">AUTH</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="ident">BucketOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">inner</span>
+            .<span class="ident">take_with_auth</span>(<span class="ident">amount</span>, <span class="ident">auth</span>.<span class="ident">unwrap</span>())
+            .<span class="ident">unchecked_into</span>()
     }
 
     <span class="doccomment">/// Takes all resourced stored in this vault, with typed result.</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_all</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">BucketOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> {
-        <span class="comment">//self.vault.take_all().into() // extra check</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_all</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">BucketOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> {
+        <span class="comment">// self.vault.take_all().into() // extra check</span>
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">take_all</span>().<span class="ident">unchecked_into</span>() <span class="comment">// no extra check</span>
     }
 
@@ -214,27 +238,33 @@
     <span class="doccomment">/// This variant of `take_all` accepts an additional auth parameter to support resources</span>
     <span class="doccomment">/// with or without `RESTRICTED_TRANSFER` flag on.</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_all_with_auth</span><span class="op">&lt;</span><span class="ident">AUTH</span>: <span class="ident">Resource</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">auth</span>: <span class="ident">BucketRefOf</span><span class="op">&lt;</span><span class="ident">AUTH</span><span class="op">&gt;</span>) -&gt; <span class="ident">BucketOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">take_all_with_auth</span>(<span class="ident">auth</span>.<span class="ident">unwrap</span>()).<span class="ident">unchecked_into</span>()
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_all_with_auth</span><span class="op">&lt;</span><span class="ident">AUTH</span>: <span class="ident">Resource</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">auth</span>: <span class="ident">BucketRefOf</span><span class="op">&lt;</span><span class="ident">AUTH</span><span class="op">&gt;</span>) -&gt; <span class="ident">BucketOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">inner</span>
+            .<span class="ident">take_all_with_auth</span>(<span class="ident">auth</span>.<span class="ident">unwrap</span>())
+            .<span class="ident">unchecked_into</span>()
     }
 
-    <span class="doccomment">/// Takes an NFT from this vault, by id.</span>
+    <span class="doccomment">/// Takes a non-fungible from this vault, by id.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
-    <span class="doccomment">/// Panics if this is not an NFT vault or the specified NFT is not found.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_nft</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">u128</span>) -&gt; <span class="ident">BucketOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">take_nft</span>(<span class="ident">id</span>).<span class="ident">unchecked_into</span>()
+    <span class="doccomment">/// Panics if this is not a non-fungible vault or the specified non-fungible is not found.</span>
+    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_non_fungible</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">NonFungibleKey</span>) -&gt; <span class="ident">BucketOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">take_non_fungible</span>(<span class="ident">key</span>).<span class="ident">unchecked_into</span>()
     }
 
-    <span class="doccomment">/// Takes an NFT from this vault, by id.</span>
+    <span class="doccomment">/// Takes a non-fungible from this vault, by id.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// This variant of `take_nft` accepts an additional auth parameter to support resources</span>
+    <span class="doccomment">/// This variant of `take_non_fungible` accepts an additional auth parameter to support resources</span>
     <span class="doccomment">/// with or without `RESTRICTED_TRANSFER` flag on.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
-    <span class="doccomment">/// Panics if this is not an NFT vault or the specified NFT is not found.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_nft_with_auth</span><span class="op">&lt;</span><span class="ident">AUTH</span>: <span class="ident">Resource</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">u128</span>, <span class="ident">auth</span>: <span class="ident">BucketRefOf</span><span class="op">&lt;</span><span class="ident">AUTH</span><span class="op">&gt;</span>) -&gt; <span class="ident">BucketOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">take_nft_with_auth</span>(<span class="ident">id</span>, <span class="ident">auth</span>.<span class="ident">unwrap</span>()).<span class="ident">unchecked_into</span>()
+    <span class="doccomment">/// Panics if this is not a non-fungible vault or the specified non-fungible is not found.</span>
+    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_non_fungible_with_auth</span><span class="op">&lt;</span><span class="ident">AUTH</span>: <span class="ident">Resource</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">NonFungibleKey</span>, <span class="ident">auth</span>: <span class="ident">BucketRefOf</span><span class="op">&lt;</span><span class="ident">AUTH</span><span class="op">&gt;</span>) -&gt; <span class="ident">BucketOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">inner</span>
+            .<span class="ident">take_non_fungible_with_auth</span>(<span class="ident">key</span>, <span class="ident">auth</span>.<span class="ident">unwrap</span>())
+            .<span class="ident">unchecked_into</span>()
     }
 
     <span class="doccomment">/// Returns the resource definition of resources within this vault.</span>
@@ -250,8 +280,7 @@
     <span class="doccomment">/// 2. Creates a `BucketRef`.</span>
     <span class="doccomment">/// 3. Applies the specified function `f` with the created bucket reference;</span>
     <span class="doccomment">/// 4. Puts the `1` resource back into this vault.</span>
-    <span class="doccomment">///</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">authorize</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="ident">BucketRefOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span>) -&gt; <span class="ident">O</span>, <span class="ident">O</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>) -&gt; <span class="ident">O</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">authorize</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="ident">BucketRefOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span>) -&gt; <span class="ident">O</span>, <span class="ident">O</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>) -&gt; <span class="ident">O</span> {
         <span class="kw">let</span> <span class="ident">bucket</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">take</span>(<span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">f</span>(<span class="ident">bucket</span>.<span class="ident">present</span>());
         <span class="self">self</span>.<span class="ident">put</span>(<span class="ident">bucket</span>);
@@ -268,8 +297,11 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// This variant of `authorize` accepts an additional auth parameter to support resources</span>
     <span class="doccomment">/// with or without `RESTRICTED_TRANSFER` flag on.</span>
-    <span class="doccomment">///</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">authorize_with_auth</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="ident">BucketRefOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span>) -&gt; <span class="ident">O</span>, <span class="ident">O</span>, <span class="ident">AUTH</span>: <span class="ident">Resource</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>, <span class="ident">auth</span>: <span class="ident">BucketRefOf</span><span class="op">&lt;</span><span class="ident">AUTH</span><span class="op">&gt;</span>) -&gt; <span class="ident">O</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">authorize_with_auth</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="ident">BucketRefOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span>) -&gt; <span class="ident">O</span>, <span class="ident">O</span>, <span class="ident">AUTH</span>: <span class="ident">Resource</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+        <span class="ident">f</span>: <span class="ident">F</span>,
+        <span class="ident">auth</span>: <span class="ident">BucketRefOf</span><span class="op">&lt;</span><span class="ident">AUTH</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="ident">O</span> {
         <span class="kw">let</span> <span class="ident">bucket</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">take_with_auth</span>(<span class="number">1</span>, <span class="ident">auth</span>);
         <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">f</span>(<span class="ident">bucket</span>.<span class="ident">present</span>());
         <span class="self">self</span>.<span class="ident">put</span>(<span class="ident">bucket</span>);
@@ -282,8 +314,9 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">RES</span>: <span class="ident">runtimechecks::Resource</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Vault</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">VaultOf</span><span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">vault</span>: <span class="ident">Vault</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="ident">runtimechecks::check_address</span>::<span class="op">&lt;</span><span class="ident">RES</span><span class="op">&gt;</span>(<span class="ident">vault</span>.<span class="ident">resource_address</span>()) {
-            <span class="kw">let</span> <span class="ident">tmp_bucket</span> <span class="op">=</span> <span class="ident">ResourceBuilder::new_fungible</span>(<span class="ident">DIVISIBILITY_MAXIMUM</span>).<span class="ident">initial_supply_fungible</span>(<span class="number">1</span>);
-            <span class="ident">vault</span>.<span class="ident">put</span>(<span class="ident">tmp_bucket</span>); <span class="comment">// this will trigger resource def mismatch error error: Err(InvokeError(Trap(Trap { kind: Host(VaultError(AccountingError(MismatchingResourceDef))) })))</span>
+            <span class="comment">// let tmp_bucket =</span>
+            <span class="comment">//     ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM).initial_supply_fungible(1);</span>
+            <span class="comment">// vault.put(tmp_bucket); // this will trigger resource def mismatch error error: Err(InvokeError(Trap(Trap { kind: Host(VaultError(AccountingError(MismatchingResourceDef))) })))</span>
                                    <span class="comment">// shouldn&#39;t get here, but just in case (and to help the compiler)</span>
             <span class="macro">panic!</span>(<span class="string">&quot;VaultOf mismatch&quot;</span>);
         }
@@ -292,5 +325,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="scrypto_statictypes" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
-    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
 </body></html>
