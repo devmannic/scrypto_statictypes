@@ -26,6 +26,7 @@ impl_SBOR_Decode!(ProofOf<RES>, Proof);
 
 impl SBORable for Proof {}
 impl Container for Proof {}
+impl_HasResourceAddress!(Proof);
 
 // required for impl_SBOR_traits! and used in forwarder (impl this or impl Deref but not both)
 impl<RES: Resource> WithInner<Proof> for ProofOf<RES> {
@@ -40,7 +41,7 @@ impl<RES: Resource> ProofOf<RES> {
     /// Returns the resource definition of resources within the bucket.
     #[inline(always)]
     pub fn resource_manager(&self) -> ResourceOf<RES> {
-        self.with_inner(|inner| inner.resource_manager().unchecked_into())
+        self.with_inner(|inner| inner.resource_address().unchecked_into())
     }
 }
 
@@ -120,11 +121,6 @@ impl<RES: Resource> ProofOf<RES> {
     pub fn amount(&self) -> Decimal {
         self.with_inner(|inner| inner.amount())
     }
-
-    /// Returns the resource definition of resources within the bucket.
-    // pub fn resource_manager(&self) -> ResourceManager {
-    //     self.deref().resource_manager()
-    // }
 
     /// Returns the resource definition address.
     #[inline(always)]

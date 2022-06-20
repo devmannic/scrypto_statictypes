@@ -1,28 +1,33 @@
 use scrypto::prelude::*;
 
 use crate::bucketof::BucketOf;
-use crate::proofof::*;
 use crate::internal::*;
 
 #[cfg(feature = "runtime_typechecks")]
 use crate::runtime::runtimechecks;
 
-impl_wrapper_struct!(ResourceOf<RES>, ResourceManager);
-impl_SBOR_traits!(ResourceOf<RES>, ResourceManager);
-impl SBORable for ResourceManager {}
-impl Container for ResourceManager {}
+impl_wrapper_struct!(ResourceOf<RES>, ResourceAddress);
+//impl_SBOR_traits!(ResourceOf<RES>, ResourceAddress);
+//impl SBORable for ResourceAddress {}
+//impl Container for ResourceAddress {}
+
+impl<RES: Resource> HasResourceAddress for ResourceOf<RES> {
+    fn _resource_address(&self) -> ResourceAddress {
+        self.inner
+    }
+}
 
 impl<RES: Resource> ResourceOf<RES> {
     /// Mints fungible resources
     #[inline(always)]
     pub fn mint<T: Into<Decimal>>(&self, amount: T) -> BucketOf<RES> {
-        self.inner.mint(amount).unchecked_into()
+        self.borrow_resource_manager().mint(amount).unchecked_into()
     }
 
     /// Mints non-fungible resources
     #[inline(always)]
     pub fn mint_non_fungible<T: NonFungibleData>(&self, id: &NonFungibleId, data: T) -> BucketOf<RES> {
-        self.inner
+        self.borrow_resource_manager()
             .mint_non_fungible(id, data)
             .unchecked_into()
     }
@@ -30,18 +35,18 @@ impl<RES: Resource> ResourceOf<RES> {
     /// Burns a bucket of resources.
     #[inline(always)]
     pub fn burn(&self, bucket: BucketOf<RES>) {
-        self.inner.burn(bucket.inner)
+        self.borrow_resource_manager().burn(bucket.inner)
     }
 }
 
 #[cfg(feature = "runtime_typechecks")]
-impl<RES: runtimechecks::Resource> From<ResourceManager> for ResourceOf<RES> {
-    fn from(resource_manager: ResourceManager) -> Self {
-        if !runtimechecks::check_address::<RES>(resource_manager.address()) {
+impl<RES: runtimechecks::Resource> From<ResourceAddress> for ResourceOf<RES> {
+    fn from(resource_address: ResourceAddress) -> Self {
+        if !runtimechecks::check_address::<RES>(resource_address) {
             // not sure a better error here as with BucketOf and VaultOf
             panic!("ResourceOf mismatch");
         }
-        resource_manager.unchecked_into()
+        resource_address.unchecked_into()
     }
 }
 

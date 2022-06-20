@@ -1,7 +1,6 @@
 use scrypto::prelude::*;
 
 use crate::bucketof::BucketOf;
-use crate::proofof::*;
 use crate::internal::*;
 use crate::resourceof::ResourceOf;
 
@@ -12,6 +11,7 @@ impl_wrapper_struct!(VaultOf<RES>, Vault);
 impl_SBOR_traits!(VaultOf<RES>, Vault);
 impl SBORable for Vault {}
 impl Container for Vault {}
+impl_HasResourceAddress!(Vault);
 
 #[cfg(feature = "runtime_typechecks")]
 impl<RES: runtimechecks::Resource> VaultOf<RES> {
@@ -67,7 +67,7 @@ impl<RES: Resource> VaultOf<RES> {
     /// Returns the resource definition of resources within this vault.
     #[inline(always)]
     pub fn resource_manager(&self) -> ResourceOf<RES> {
-        self.inner.resource_manager().unchecked_into()
+        self.inner.resource_address().unchecked_into()
     }
 
     /// Uses resources in this vault as authorization for an operation.

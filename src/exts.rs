@@ -3,7 +3,7 @@ use crate::bucketof::*;
 use crate::internal::*;
 use crate::resourceof::*;
 use scrypto::prelude::{
-    Runtime, scrypto_decode, scrypto_encode, Bucket, Decimal, ResourceManager, ComponentAddress
+    Runtime, scrypto_decode, scrypto_encode, Bucket, Decimal, ComponentAddress
 };
 
 #[cfg(feature = "runtime_typechecks")]
@@ -67,15 +67,15 @@ where Self: Deposit
 //
 
 pub trait Withdraw {
-    fn withdraw<A: Into<ResourceManager>>(&self, amount: Decimal, resource_manager: A) -> Bucket;
+    fn withdraw<A: Into<ResourceAddress>>(&self, amount: Decimal, resource_address: A) -> Bucket;
 }
 impl Withdraw for Account {
-    // #[inline(always)] // put this back if the bug is fixed
-    fn withdraw<A: Into<ResourceManager>>(&self, amount: Decimal, resource_manager: A) -> Bucket {
-        // Account::withdraw(self, amount, resource_manager) // BUG in Scrypto implementation missing return Bucket?  Reimplement here for now -- https://github.com/radixdlt/radixdlt-scrypto/issues/107
+    #[inline(always)]
+    fn withdraw<A: Into<ResourceAddress>>(&self, amount: Decimal, resource_address: A) -> Bucket {
+        //Account::withdraw(self, amount, resource_address)
         let args = vec![
             scrypto_encode(&amount),
-            scrypto_encode(&resource_manager.into()),
+            scrypto_encode(&resource_address.into()),
         ];
         let rtn = Runtime::call_method(self.address(), "withdraw", args);
         scrypto_decode(&rtn).unwrap()

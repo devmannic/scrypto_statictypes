@@ -11,6 +11,7 @@ impl_wrapper_struct!(BucketOf<RES>, Bucket);
 impl_SBOR_traits!(BucketOf<RES>, Bucket);
 impl SBORable for Bucket {}
 impl Container for Bucket {}
+impl_HasResourceAddress!(Bucket);
 
 #[cfg(feature = "runtime_typechecks")]
 impl<RES: runtimechecks::Resource> BucketOf<RES> {
@@ -54,7 +55,13 @@ impl<RES: Resource> BucketOf<RES> {
 
     /// Returns the resource definition of resources in this bucket.
     #[inline(always)]
-    pub fn resource_address(&self) -> ResourceOf<RES> {
+    pub fn resource_address(&self) -> ResourceAddress {
+        self.inner.resource_address()
+    }
+
+    /// Returns the resource definition of resources in this bucket.
+    #[inline(always)]
+    pub fn resource_manager(&self) -> ResourceOf<RES> {
         self.inner.resource_address().unchecked_into()
     }
 

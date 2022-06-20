@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-pub use scrypto::prelude::ResourceAddress;
+pub use scrypto::prelude::{ResourceAddress, ResourceManager};
 
 pub trait Resource: std::fmt::Debug {} // supertrait to ensure the correct traits propate to all of the templates
 
@@ -9,6 +9,26 @@ pub trait ResourceDecl: Resource {
 }
 
 pub trait Container: SBORable {}
+
+pub trait HasResourceAddress {
+    fn _resource_address(&self) -> ResourceAddress;
+    fn borrow_resource_manager(&self) -> &ResourceManager {
+        use scrypto::prelude::*; // make sure the macro works
+        borrow_resource_manager!(HasResourceAddress::_resource_address(self))
+    }
+}
+
+macro_rules! impl_HasResourceAddress {
+    ( $w:ty ) => {
+        impl HasResourceAddress for $w {
+            #[inline(always)]
+            fn _resource_address(&self) -> ResourceAddress {
+                self.resource_address()
+            }
+        }
+    }
+}
+pub(crate) use impl_HasResourceAddress; // export for use within crate
 
 //=====
 // SBOR
