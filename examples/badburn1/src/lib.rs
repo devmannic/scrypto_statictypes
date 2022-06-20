@@ -13,10 +13,10 @@ blueprint! {
         pub fn new() -> (ComponentAddress, Bucket, Bucket) {
             // create one owner badge for auth for the burn_it functino
             let owner = ResourceBuilder::new_fungible().divisibility(DIVISIBILITY_NONE).initial_supply(1);
-            debug!("owner  raddr: {}", owner.resource_address());
+
             // create 1 minter badge for 2 resources, FLAM and INFLAM
             let minter = ResourceBuilder::new_fungible().divisibility(DIVISIBILITY_NONE).initial_supply(1);
-            debug!("minter raddr: {}", minter.resource_address());
+
             // create FLAM and mint 1000
             let mut flammable_bucket = ResourceBuilder::new_fungible()
                 .metadata("name", "BurnMe")
@@ -24,7 +24,7 @@ blueprint! {
                 .mintable(rule!(require(minter.resource_address())), LOCKED)
                 .burnable(rule!(require(minter.resource_address())), LOCKED)
                 .initial_supply(1000);
-            debug!("flam   raddr: {}", flammable_bucket.resource_address());
+
             // create INFLAM and mint 1000
             let inflammable_bucket = ResourceBuilder::new_fungible()
                 .metadata("name", "KeepMe")
@@ -32,7 +32,6 @@ blueprint! {
                 .mintable(rule!(require(minter.resource_address())), LOCKED)
                 .burnable(rule!(require(minter.resource_address())), LOCKED)
                 .initial_supply(1000);
-            debug!("inflam raddr: {}", inflammable_bucket.resource_address());
 
             // setup component storage
             let flam_vault = Vault::with_bucket(flammable_bucket.take(800)); // FLAM: 800 stay here, 200 are returned
@@ -53,7 +52,6 @@ blueprint! {
         }
 
         pub fn burn_it(&mut self, mut incoming: Bucket) -> Bucket {
-            debug!("incoming raddr: {}", incoming.resource_address());
             // burn all but 5, give back same amount of inflam
             if incoming.amount() > dec!(5) {
                 self.flam_vault.put(incoming.take(dec!(5)));

@@ -1,15 +1,15 @@
 [package]
 name = "fixburn1"
-version = "0.3.0"
+version = "0.4.1"
 edition = "2021"
 
 [dependencies]
-sbor = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.3.0" }
-scrypto = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.3.0" }
+sbor = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.4.1" }
+scrypto = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.4.1" }
 scrypto_statictypes = { path = "../../" }
 
 [dev-dependencies]
-radix-engine = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.3.0" }
+radix-engine = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v0.4.1" }
 
 [profile.release]
 opt-level = 's'     # Optimize for size.
@@ -19,7 +19,6 @@ panic = 'abort'     # Abort on panic.
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "out"
 path = "src/choose.rs"
 
 [features]
