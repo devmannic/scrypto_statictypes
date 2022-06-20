@@ -48,16 +48,16 @@ impl<RES: Resource> ProofOf<RES> {
 // custom impl From<Proof> with runtime checks
 #[cfg(feature = "runtime_typechecks")]
 impl<RES: runtimechecks::Resource> From<Proof> for ProofOf<RES> {
-    fn from(Proof: Proof) -> Self {
-        if !runtimechecks::check_address::<RES>(Proof.resource_address()) {
+    fn from(proof: Proof) -> Self {
+        if !runtimechecks::check_address::<RES>(proof.resource_address()) {
             // not sure a better error here as with BucketOf and VaultOf
             panic!("Proof mismatch");
         }
-        if Proof.amount() <= 0.into() {
+        if proof.amount() <= 0.into() {
             // check() and contains() both check the amount, choosing to keep these semantics
             panic!("Will not create empty ProofOf");
         }
-        UncheckedIntoProofOf::unchecked_into(Proof)
+        UncheckedIntoProofOf::unchecked_into(proof)
     }
 }
 

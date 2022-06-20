@@ -7,9 +7,9 @@ use crate::internal::*;
 use crate::runtime::runtimechecks;
 
 impl_wrapper_struct!(ResourceOf<RES>, ResourceAddress);
-//impl_SBOR_traits!(ResourceOf<RES>, ResourceAddress);
-//impl SBORable for ResourceAddress {}
-//impl Container for ResourceAddress {}
+impl_SBOR_traits!(ResourceOf<RES>, ResourceAddress);
+impl SBORable for ResourceAddress {}
+impl Container for ResourceAddress {}
 
 impl<RES: Resource> HasResourceAddress for ResourceOf<RES> {
     fn _resource_address(&self) -> ResourceAddress {

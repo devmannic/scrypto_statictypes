@@ -17,8 +17,8 @@ impl_HasResourceAddress!(Vault);
 impl<RES: runtimechecks::Resource> VaultOf<RES> {
     // runtime_checks requires trait bound on runtimechecks::Resource and use of .into() in new() may have runtime_checks (so we need a different impl block)
     #[inline(always)]
-    pub fn new<A: Into<ResourceManager>>(resource_manager: A) -> Self {
-        Vault::new(resource_manager).into()
+    pub fn new(resource_address: ResourceAddress) -> Self {
+        Vault::new(resource_address).into()
     }
 }
 

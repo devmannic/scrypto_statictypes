@@ -18,8 +18,8 @@ impl<RES: runtimechecks::Resource> BucketOf<RES> {
     // use of .into() when runtime_checks requires trait bound on runtimechecks::Resource because of From trait bound (so we need a different impl block)
     /// Creates a new bucket to hold resources of the given definition.
     #[inline(always)]
-    pub fn new<A: Into<ResourceManager>>(resource_manager: A) -> Self {
-        Bucket::new(resource_manager).into()
+    pub fn new(resource_address: ResourceAddress) -> Self {
+        Bucket::new(resource_address).into()
     }
 }
 

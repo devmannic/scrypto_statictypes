@@ -8,7 +8,7 @@ pub(crate) mod runtimechecks {
 
     pub trait Resource: crate::internal::Resource {
         fn index() -> AddressKey;
-        fn address() -> Option<Address>;
+        fn address() -> Option<ResourceAddress>;
     }
     impl<T: ResourceDecl + 'static> Resource for T {
         #[inline(always)]
@@ -17,7 +17,7 @@ pub(crate) mod runtimechecks {
         }
 
         #[inline(always)]
-        fn address() -> Option<Address> {
+        fn address() -> Option<ResourceAddress> {
             T::ADDRESS
         }
     }
@@ -30,8 +30,8 @@ pub(crate) mod runtimechecks {
 
     #[derive(Default)]
     struct KnownAddresses {
-        addresses: std::collections::HashMap<AddressKey, Address>,
-        all_addresses: std::collections::HashSet<Address>,
+        addresses: std::collections::HashMap<AddressKey, ResourceAddress>,
+        all_addresses: std::collections::HashSet<ResourceAddress>,
     }
 
     struct SingletonReader {
@@ -62,7 +62,7 @@ pub(crate) mod runtimechecks {
     }
     // end of only_once alternative
 
-    pub fn check_address<RES: Resource>(address: Address) -> bool {
+    pub fn check_address<RES: Resource>(address: ResourceAddress) -> bool {
         match RES::address() {
             Some(expected) => {
                 let r = expected == address;
