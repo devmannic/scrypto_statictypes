@@ -8,7 +8,7 @@
 //! use scrypto_statictypes::prelude::*;
 //! ```
 pub use crate::bucketof::BucketOf;
-pub use crate::bucketrefof::{BucketRefOf, UncheckedIntoBucketRefOf};
+pub use crate::proofof::{ProofOf, UncheckedIntoProofOf};
 pub use crate::declare_resource; /* this is for the macros themselves, and must be explicitly named (at top level due to #[macro_export]) */
 pub use crate::exts::{
     Deposit, DepositOf, DepositOfExplicit, Withdraw, WithdrawOf, WithdrawOfExplicit,

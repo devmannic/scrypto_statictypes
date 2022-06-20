@@ -7,8 +7,8 @@
 //! - Safe drop in replacements coexist with existing types.  Gradually apply these only where you need them:
 //!   - `Bucket` --> `BucketOf<MYTOKEN>`
 //!   - `Vault` --> `VaultOf<MYTOKEN>`
-//!   - `ResourceDef` --> `ResourceOf<MYTOKEN>`
-//!   - `BucketRef` --> `BucketRefOf<MYTOKEN>`
+//!   - `ResourceManager` --> `ResourceOf<MYTOKEN>`
+//!   - `Proof` --> `ProofOf<MYTOKEN>`
 //! - Conveniently defined `XRD` Resource to use with `VaultOf<XRD>`, and friends.
 //! - Simple macro to declare new resources: `declare_resource!(MYTOKEN)`
 //! - Optional feature `runtime_typechecks` for safety critical code, or use in
@@ -129,7 +129,7 @@
 pub mod prelude;
 
 mod bucketof;
-mod bucketrefof;
+mod proofof;
 mod exts;
 mod internal;
 mod resourceof;

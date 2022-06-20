@@ -1,11 +1,11 @@
 use std::ops::Deref;
 
-pub use scrypto::prelude::Address;
+pub use scrypto::prelude::ResourceAddress;
 
 pub trait Resource: std::fmt::Debug {} // supertrait to ensure the correct traits propate to all of the templates
 
 pub trait ResourceDecl: Resource {
-    const ADDRESS: Option<Address>;
+    const ADDRESS: Option<ResourceAddress>;
 }
 
 pub trait Container: SBORable {}
@@ -213,7 +213,7 @@ macro_rules! impl_SBOR_Decode {
             #[inline(always)]
             fn decode_value(decoder: &mut sbor::Decoder) -> Result<Self, sbor::DecodeError> {
                 let r = <$t as sbor::Decode>::decode_value(decoder);
-                r.map(|inner| inner.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `T`'s ResourceDef (Address) with this type "RES"
+                r.map(|inner| inner.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `T`'s ResourceManager (Address) with this type "RES"
             }
         }
 
@@ -224,7 +224,7 @@ macro_rules! impl_SBOR_Decode {
             #[inline(always)]
             fn decode_value(decoder: &mut sbor::Decoder) -> Result<Self, sbor::DecodeError> {
                 let r = <$t as sbor::Decode>::decode_value(decoder);
-                r.map(|inner| inner.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `T`'s ResourceDef (Address) with this type "RES"
+                r.map(|inner| inner.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `T`'s ResourceManager (Address) with this type "RES"
             }
         }
     };
