@@ -9,97 +9,97 @@ use crate::resourceof::ResourceOf;
 #[cfg(feature = "runtime_typechecks")]
 use crate::runtime::runtimechecks;
 
-// impl_wrapper_struct!(BucketRefOf<RES>, BucketRef); // can't use this with Drop, so instead custom implementation below
-impl_wrapper_common!(BucketRefOf<RES>, BucketRef); // still want the common implementation
+// impl_wrapper_struct!(ProofOf<RES>, Proof); // can't use this with Drop, so instead custom implementation below
+impl_wrapper_common!(ProofOf<RES>, Proof); // still want the common implementation
 
-// custom BucketRefOf using RefCell so we can implement Drop
+// custom ProofOf using RefCell so we can implement Drop
 #[derive(Debug)]
-pub struct BucketRefOf<RES: Resource> {
-    inner: RefCell<Option<BucketRef>>,
+pub struct ProofOf<RES: Resource> {
+    inner: RefCell<Option<Proof>>,
     phantom: PhantomData<RES>,
 }
 
 // the "standard" impl and traits (but we may not have Decode, and we always have a custom Encode)
-impl_SBOR_traits_without_Encode_Decode!(BucketRefOf<RES>, BucketRef);
+impl_SBOR_traits_without_Encode_Decode!(ProofOf<RES>, Proof);
 #[cfg(feature = "runtime_typechecks")]
-impl_SBOR_Decode!(BucketRefOf<RES>, BucketRef);
+impl_SBOR_Decode!(ProofOf<RES>, Proof);
 
-impl SBORable for BucketRef {}
-impl Container for BucketRef {}
+impl SBORable for Proof {}
+impl Container for Proof {}
 
 // required for impl_SBOR_traits! and used in forwarder (impl this or impl Deref but not both)
-impl<RES: Resource> WithInner<BucketRef> for BucketRefOf<RES> {
+impl<RES: Resource> WithInner<Proof> for ProofOf<RES> {
     #[inline(always)]
-    fn with_inner<F: FnOnce(&BucketRef) -> O, O>(&self, f: F) -> O {
-        f(&self.inner.borrow().as_ref().unwrap()) // will panic on already droped BucketRef
+    fn with_inner<F: FnOnce(&Proof) -> O, O>(&self, f: F) -> O {
+        f(&self.inner.borrow().as_ref().unwrap()) // will panic on already droped Proof
     }
 }
 
 // "overrides" where in/out types are changed to Something<RES>
-impl<RES: Resource> BucketRefOf<RES> {
+impl<RES: Resource> ProofOf<RES> {
     /// Returns the resource definition of resources within the bucket.
     #[inline(always)]
-    pub fn resource_def(&self) -> ResourceOf<RES> {
-        self.with_inner(|inner| inner.resource_def().unchecked_into())
+    pub fn resource_manager(&self) -> ResourceOf<RES> {
+        self.with_inner(|inner| inner.resource_manager().unchecked_into())
     }
 }
 
-// custom impl From<BucketRef> with runtime checks
+// custom impl From<Proof> with runtime checks
 #[cfg(feature = "runtime_typechecks")]
-impl<RES: runtimechecks::Resource> From<BucketRef> for BucketRefOf<RES> {
-    fn from(bucketref: BucketRef) -> Self {
-        if !runtimechecks::check_address::<RES>(bucketref.resource_address()) {
+impl<RES: runtimechecks::Resource> From<Proof> for ProofOf<RES> {
+    fn from(Proof: Proof) -> Self {
+        if !runtimechecks::check_address::<RES>(Proof.resource_address()) {
             // not sure a better error here as with BucketOf and VaultOf
-            panic!("BucketRef mismatch");
+            panic!("Proof mismatch");
         }
-        if bucketref.amount() <= 0.into() {
+        if Proof.amount() <= 0.into() {
             // check() and contains() both check the amount, choosing to keep these semantics
-            panic!("Will not create empty BucketRefOf");
+            panic!("Will not create empty ProofOf");
         }
-        UncheckedIntoBucketRefOf::unchecked_into(bucketref)
+        UncheckedIntoProofOf::unchecked_into(Proof)
     }
 }
 
-// choosing to implement this with panic! instead of unchecked_into because BucketRef is used for autnentication and silently converting at runtime is worse than
+// choosing to implement this with panic! instead of unchecked_into because Proof is used for autnentication and silently converting at runtime is worse than
 // with other types like Vault and Bucket where there is more benefit to allow gradual typing
-// custom impl From<BucketRef> since we can't use impl_wrapper_struct! for BucketRefOf
+// custom impl From<Proof> since we can't use impl_wrapper_struct! for ProofOf
 #[cfg(not(feature = "runtime_typechecks"))]
-impl<RES: Resource> From<BucketRef> for BucketRefOf<RES> {
+impl<RES: Resource> From<Proof> for ProofOf<RES> {
     #[inline(always)]
-    fn from(_inner: BucketRef) -> Self {
-        panic!("Unsafe creation of BucketRefOf from BucketRef.  Enable scrypto_statictypes/runtime_typechecks or use .unchecked_into()");
-        // UncheckedIntoBucketRefOf::unchecked_into(inner)
+    fn from(_inner: Proof) -> Self {
+        panic!("Unsafe creation of ProofOf from Proof.  Enable scrypto_statictypes/runtime_typechecks or use .unchecked_into()");
+        // UncheckedIntoProofOf::unchecked_into(inner)
     }
 }
 
-// custom Drop to call .drop() the inner BucketRef -- which is for Radix Engine and different from drop(BucketRef)
-impl<RES: Resource> Drop for BucketRefOf<RES> {
+// custom Drop to call .drop() the inner Proof -- which is for Radix Engine and different from drop(Proof)
+impl<RES: Resource> Drop for ProofOf<RES> {
     fn drop(&mut self) {
         let opt = self.inner.borrow_mut().take();
-        opt.and_then(|bucketref| {
-            debug!("Drop BucketRefOf {:?}", bucketref);
-            Some(bucketref.drop())
+        opt.and_then(|proof| {
+            debug!("Drop ProofOf {:?}", proof);
+            Some(proof.drop())
         });
     }
 }
 
-// define how to create a BucketRefOf<RES>
-pub trait UncheckedIntoBucketRefOf<RES: Resource> {
-    fn unchecked_into(self) -> BucketRefOf<RES>;
+// define how to create a ProofOf<RES>
+pub trait UncheckedIntoProofOf<RES: Resource> {
+    fn unchecked_into(self) -> ProofOf<RES>;
 }
-impl<RES: Resource> UncheckedIntoBucketRefOf<RES> for BucketRef {
+impl<RES: Resource> UncheckedIntoProofOf<RES> for Proof {
     #[inline(always)]
-    fn unchecked_into(self) -> BucketRefOf<RES> {
-        BucketRefOf::<RES> {
+    fn unchecked_into(self) -> ProofOf<RES> {
+        ProofOf::<RES> {
             inner: RefCell::new(Some(self)),
             phantom: PhantomData::<RES>,
         }
     }
 }
 
-// how to get the BucketRef with move semantics
-impl<RES: Resource> Unwrap for BucketRefOf<RES> {
-    type Value = BucketRef;
+// how to get the Proof with move semantics
+impl<RES: Resource> Unwrap for ProofOf<RES> {
+    type Value = Proof;
 
     #[inline(always)]
     fn unwrap(self) -> Self::Value {
@@ -108,16 +108,11 @@ impl<RES: Resource> Unwrap for BucketRefOf<RES> {
 }
 
 // "forwarding" implementations because we can't implement Deref while using Drop
-impl<RES: Resource> BucketRefOf<RES> {
-    /// Checks if the referenced bucket contains the given resource, and aborts if not so.
-    pub fn check<A: Into<ResourceDef>>(self, resource_def: A) {
-        self.unwrap().check(resource_def)
-    }
-
-    /// Checks if the referenced bucket contains the given resource.
+impl<RES: Resource> ProofOf<RES> {
+    /// Whether this proof includes an ownership proof of any of the given resource.
     #[inline(always)]
-    pub fn contains<A: Into<ResourceDef>>(&self, resource_def: A) -> bool {
-        self.with_inner(|inner| inner.contains(resource_def))
+    pub fn contains(&self, resource: ResourceAddress) -> bool {
+        self.with_inner(|inner| inner.contains(resource))
     }
 
     /// Returns the resource amount within the bucket.
@@ -127,23 +122,14 @@ impl<RES: Resource> BucketRefOf<RES> {
     }
 
     /// Returns the resource definition of resources within the bucket.
-    // pub fn resource_def(&self) -> ResourceDef {
-    //     self.deref().resource_def()
+    // pub fn resource_manager(&self) -> ResourceManager {
+    //     self.deref().resource_manager()
     // }
 
     /// Returns the resource definition address.
     #[inline(always)]
-    pub fn resource_address(&self) -> Address {
+    pub fn resource_address(&self) -> ResourceAddress {
         self.with_inner(|inner| inner.resource_address())
-    }
-
-    /// Returns the key of a singleton non-fungible.
-    ///
-    /// # Panic
-    /// If the bucket is empty or contains more than one non-fungibles.
-    #[inline(always)]
-    pub fn get_non_fungible_key(&self) -> NonFungibleKey {
-        self.with_inner(|inner| inner.get_non_fungible_key())
     }
 
     /// Returns the keys of all non-fungibles in this bucket.
@@ -151,8 +137,8 @@ impl<RES: Resource> BucketRefOf<RES> {
     /// # Panics
     /// If the bucket is not a non-fungible bucket.
     #[inline(always)]
-    pub fn get_non_fungible_keys(&self) -> Vec<NonFungibleKey> {
-        self.with_inner(|inner| inner.get_non_fungible_keys())
+    pub fn non_fungible_ids(&self) -> BTreeSet<NonFungibleId> {
+        self.with_inner(|inner| inner.non_fungible_ids())
     }
 
     /// Destroys this reference.
@@ -168,17 +154,17 @@ impl<RES: Resource> BucketRefOf<RES> {
     }
 }
 
-// custom Encode that takes the value so it can't be dropped twice (semantics are Encode should own/move the BucketRef)
-impl<RES: Resource> sbor::Encode for BucketRefOf<RES>
-where BucketRefOf<RES>: WithInner<BucketRef>
+// custom Encode that takes the value so it can't be dropped twice (semantics are Encode should own/move the Proof)
+impl<RES: Resource> sbor::Encode for ProofOf<RES>
+where ProofOf<RES>: WithInner<Proof>
 {
     // Encode
     #[inline(always)]
     fn encode_value(&self, encoder: &mut sbor::Encoder) {
         // self.with_inner(|inner| <$t as sbor::Encode>::encode_value(inner, encoder))
-        let br: BucketRef = self.inner.borrow_mut().take().unwrap(); // take so the Drop trait can't drop the BucketRef
-        debug!("Encode BucketRefOf {:?}", br);
-        <BucketRef as sbor::Encode>::encode_value(&br, encoder) // encode here
-                                                                // let BucketRef go out of scope (it doesn't have Drop)
+        let br: Proof = self.inner.borrow_mut().take().unwrap(); // take so the Drop trait can't drop the Proof
+        debug!("Encode ProofOf {:?}", br);
+        <Proof as sbor::Encode>::encode_value(&br, encoder) // encode here
+                                                                // let Proof go out of scope (it doesn't have Drop)
     }
 }
