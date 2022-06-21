@@ -16,8 +16,8 @@ A Scrypto (Rust) library for static types, featuring:
 - Safe drop in replacements coexist with existing types.  Gradually apply these only where you need them:
   - `Bucket` --> `BucketOf<MYTOKEN>`
   - `Vault` --> `VaultOf<MYTOKEN>`
-  - `ResourceDef` --> `ResourceOf<MYTOKEN>`
-  - `BucketRef` --> `BucketRefOf<MYTOKEN>`
+  - `ResourceAddress` --> `ResourceOf<MYTOKEN>`
+  - `Proof` --> `ProofOf<MYTOKEN>`
 - Conveniently defined `XRD` Resource to use with `VaultOf<XRD>`, and friends.
 - Simple macro to declare new resources: `declare_resource!(MYTOKEN)`
 - Optional feature `runtime_typechecks` for safety critical code, or use in
@@ -29,12 +29,11 @@ It's also worth pointing out what `scrypto_statictypes` *is not*:
   there are no resource mismatches, and it can do this all at compile time.
   But, There is no completely static way to ensure proper usage of resources
   received by a component.  Any (incorrect) ABI may be used when calling a
-  function or method on a component.  Transactions are inherently dynamic
-  with arguments referencing `ResourceDef`'s which are simply wrappers around
-  an `Address`.  Runtime checks are still needed, and luckily are performed
+  function or method on a component.  Transactions are inherently dynamic.
+  Runtime checks are still needed, and luckily are performed
   by the Radix Engine.  However, this library can still help avoid
   implementation errors which would go undetected by the Radix Engine (ie.
-  burning the wrong type of resource).
+  logic errors manipulating the wrong type of resource).
 
 ## Usage
 
@@ -77,27 +76,31 @@ blueprint! {
         // my_vault: Vault // the old way
         my_vault: VaultOf<MYTOKEN> // the new way
     }
-    pub fn new() -> Component {
-        let my_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)  // notice we didn't have to explicitly write out the type ie. Bucket<MYTOKEN>
+    pub fn new() -> ComponentAddress {
+        let my_bucket = ResourceBuilder::new_fungible()  // notice we didn't have to explicitly write out the type ie. Bucket<MYTOKEN>
             .metadata("name", "MyToken")
             .metadata("symbol", "MYTOKEN")
-            .initial_supply_fungible(1000)
+            .initial_supply(1000)
             .into(); // the new way: .into() needed to convert Bucket -> Bucket<MYTOKEN>
         Self {
             // my_vault: Vault::with_bucket(my_bucket) // the old way
             my_vault: VaultOf::with_bucket(my_bucket) // the new way: use VaultOf instead of Vault
         }
+        .instantiate()
+        .globalize()
     }
     // or even fewer changes when only setting up a vault.
-    pub fn new_easier() -> Component {
-        let my_bucket = ResourceBuilder::new()  // this is a regular Bucket, but we're only using it to fill the vault
+    pub fn new_easier() -> ComponentAddress {
+        let my_bucket = ResourceBuilder::new_fungible()  // this is a regular Bucket, but we're only using it to fill the vault
             .metadata("name", "MyToken")
             .metadata("symbol", "MYTOKEN")
-            .new_token_fixed(1000);
+            .initial_supply(1000);
         Self {
             // my_vault: Vault::with_bucket(my_bucket) // the old way
             my_vault: Vault::with_bucket(my_bucket).into() // the new way: .into() needed to convert Vault -> VaultOf<MYTOKEN>
         }
+        .instantiate()
+        .globalize()
     }
 
     // old way (or for when the resource type really is allowed to be anything, just keep using Bucket)
@@ -121,17 +124,17 @@ in a `Bucket` or `Vault`.  This includes badges and NFTs.
 
 That's just the beginning.... You can also replace:
 
-`ResourceDef` -> `ResourceOf<MYTOKEN>`
+`ResourceAddress` -> `ResourceOf<MYTOKEN>`
 
-`BucketRef` -> `BucketRefOf<MYTOKEN>`
+`Proof` -> `ProofOf<MYTOKEN>`
 
 And with runtime checks enabled, you get a more
-convenient and safe API for checks that used to be done with `#[auth(some_resource_def)]`.  You can
-use one or more `BucketRefOf` arguments to limit access without manual checks against
-`some_resource_def`.  Simply change the type of `some_resource_def` to `ResourceOf<SOMETHING>` in the Component struct.  Or if you already have a `VaultOf<SOMETHING>` no new `ResourceOf` is needed.
+convenient and safe API for doing "pass-by-intent" style Proof arguments.  You can
+use one or more `ProofOf` arguments to limit access without manual checks against
+some `ResourceAddress`.  Simply change the type from `ResourceAddress` to `ResourceOf<SOMETHING>` in the Component struct.  Or if you already have a `VaultOf<SOMETHING>` no extra `ResourceOf` is needed.
 
-To let the compiler help as much as possible the `BucketRefOf` type will automatically
-drop the reference to its bucket when it goes out of scope.  This works correctly when returning `BucketRefOf`s or calling other functions/methods. Never worry about explicitly calling `bucketref.drop()`.
+To let the compiler help as much as possible the `ProofOf` type will automatically
+drop the reference to its bucket when it goes out of scope.  This works correctly when returning `ProofOf`s or calling other functions/methods. Never worry about explicitly calling `some_proof.drop()`.
 
 These new types are usable everywhere: replace function/method argument and return types, local variables, fields in structs (including the main component storage struct).  Everything just works.
 
@@ -159,7 +162,7 @@ Optionally, the following features can be enabled:
     instantiate the component struct very early and decode a `Vid` into the `VaultOf<NAME>` which correctly binds
     the address.
   - Errors caught are trapped to the Radix Engine runtime failing the transaction immediately in 
-    exactly the same way as when using `Bucket` or `Vault`, even with the exact same error as with a  "bad" `Bucket::put` or `Vault::put`.  Respectively `Err(InvokeError(Trap(Trap { kind: Host(BucketError(MismatchingResourceDef)) })))` and `Err(InvokeError(Trap(Trap { kind: Host(VaultError(AccountingError(MismatchingResourceDef))) })))`
+    exactly the same way as when using `Bucket` or `Vault`, even with the exact same error as with a  "bad" `Bucket::put` or `Vault::put`.  Respectively `Err(InvokeError(Trap(Trap { kind: Host(BucketError(MismatchingResourceManager)) })))` and `Err(InvokeError(Trap(Trap { kind: Host(VaultError(AccountingError(MismatchingResourceManager))) })))`
 
 
 ## Examples
@@ -169,7 +172,7 @@ See the directories in [/examples](/examples) for complete scrypto packages util
 * [/examples/mycomponent](/examples/mycomponent) - Same example as in the [API reference (master branch)](https://devmannic.github.io/scrypto_statictypes) so you can easily try and see the compiler errors
 * [/examples/badburn1](/examples/badburn1) - Example blueprint which does *NOT* use `scrypto_statictypes` and has a logic error which leads to burning the bucket argument even if it was the wrong asset
 * [/examples/fixburn1](/examples/fixburn1) - Direct modification of `BadBurn` to use static types everywhere, and enable runtime type checks.  The test case shows the "bad burn" is caught and the tx fails. -- checkout just the diff of changes in [/misc/bad2fixburn1.diff](/misc/bad2fixburn1.diff)
-* [/examples/manyrefs](/examples/manyrefs) - Example using BucketRefOf a whole lot showing it's usefulness for nuanced authentication/verification
+* [/examples/manyrefs](/examples/manyrefs) - Example using ProofOf a whole lot showing it's usefulness for nuanced authentication/verification
 
 ## Versions
 
@@ -218,10 +221,8 @@ I believe Radix will be a game-changing technology stack for Decentralized
 Finance.  Scrypto is already amazing and going to continue to evolve.  I think
 at this very early stage it does so many things right, however it's a missed
 opportunity to treat all `Bucket`s and `Vault`s as dynamic types that could
-hold anything, when in fact they are bound by their `ResourceDef` upon creation.
-There is also a lot of duplicate code checking `BucketRef`s as the main form of
-authentication when it could be done declaratively in more places than just the existing
-auth macros.  These omissions can lead
+hold anything, when in fact they are bound by their held `ResourceAddress` upon creation.
+There is also a lot of duplicate code to check `Proof`s which are often security critical when they are used for authentication.  These omissions can lead
 to entire classes of logic errors which could be avoided.  This means
 lost productivity at best, and real vulnerabilities at worst.  I didn't want
 development practices to standardize leaving these gaps.
@@ -236,7 +237,7 @@ gets us the rest of the way.  It makes the usage seamless.  And since
 it's implemented with Rust's generics and `PhantomData` there is no extra
 storage of the type information.
 
-Then, going a step further I added runtime tests of the underlying `Address`es.
+Then, going a step further I added runtime tests of the underlying `ResourceAddress`es.
 This is behind a feature flag so is opt-in as it does add some extra
 performance overhead.  But, there are cases where it can absolutely detect a
 logic error due to misuse of a Bucket or Vault, when the current Radix Engine
