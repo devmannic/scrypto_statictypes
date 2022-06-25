@@ -85,13 +85,7 @@ impl<RES: Resource> BucketOf<RES> {
     }
 }
 
-impl<RES: Resource> TryFrom<&[u8]> for BucketOf<RES> {
-    type Error = ParseBucketError;
-
-    fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
-        Ok(Bucket::try_from(slice)?.into())
-    }
-}
+impl_TryFrom_Slice!(BucketOf<RES>, ParseBucketError);
 
 #[cfg(feature = "runtime_typechecks")]
 impl<RES: runtimechecks::Resource> From<Bucket> for BucketOf<RES> {

@@ -32,9 +32,10 @@ impl_HasResourceAddress!(Proof);
 
 // required for impl_SBOR_traits! and used in forwarder (impl this or impl Deref but not both)
 impl<RES: Resource> WithInner<Proof> for ProofOf<RES> {
+    type Inner = Proof;
     #[inline(always)]
     fn with_inner<F: FnOnce(&Proof) -> O, O>(&self, f: F) -> O {
-        f(&self.inner.borrow().as_ref().unwrap()) // will panic on already droped Proof
+        f(&self.inner.borrow().as_ref().unwrap()) // will panic on already dropped Proof
     }
 }
 
@@ -196,13 +197,7 @@ impl<RES: Resource> ProofOf<RES> {
     }
 }
 
-impl<RES: Resource> TryFrom<&[u8]> for ProofOf<RES> {
-    type Error = ParseProofError;
-
-    fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
-        Ok(Proof::try_from(slice)?.into())
-    }
-}
+impl_TryFrom_Slice!(ProofOf<RES>, ParseProofError);
 
 // custom Encode that takes the value so it can't be dropped twice (semantics are Encode should own/move the Proof)
 impl<RES: Resource> sbor::Encode for ProofOf<RES>

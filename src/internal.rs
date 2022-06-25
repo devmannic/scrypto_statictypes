@@ -71,10 +71,12 @@ pub trait SBORable: TypeId + Encode + Decode + Describe {
 
 // abstract how the inner value is retrieved for use in encode_value (or elsewhere)
 pub trait WithInner<T> {
+    type Inner;
     fn with_inner<F: FnOnce(&T) -> O, O>(&self, f: F) -> O;
 }
 // for anything that supports Deref, just use that (but only implement on our Containers)
 impl<T: Container, W: Deref<Target = T>> WithInner<T> for W {
+    type Inner = T;
     #[inline(always)]
     fn with_inner<F: FnOnce(&T) -> O, O>(&self, f: F) -> O {
         f(self)
@@ -251,3 +253,28 @@ macro_rules! impl_SBOR_Decode {
 }
 
 pub(crate) use impl_SBOR_Decode; // export for use within crate
+
+macro_rules! impl_TryFrom_Slice {
+    ( $w:ty, $e:ident ) => {
+        // runtime_checks requires trait bound on runtimechecks::Resource and use of .into() may have runtime_checks (so we need a different impl block)
+        #[cfg(feature = "runtime_typechecks")]
+        impl<RES: runtimechecks::Resource> TryFrom<&[u8]> for $w {
+            type Error = $e;
+
+            fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
+                Ok(<$w as WithInner<_>>::Inner::try_from(slice)?.into())
+            }
+        }
+
+        #[cfg(not(feature = "runtime_typechecks"))]
+        impl<RES: Resource> TryFrom<&[u8]> for $w {
+            type Error = $e;
+
+            fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
+                Ok(<$w as WithInner<_>>::Inner::try_from(slice)?.into())
+            }
+        }
+    };
+}
+
+pub(crate) use impl_TryFrom_Slice; // export for use within crate

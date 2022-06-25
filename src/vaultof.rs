@@ -103,13 +103,7 @@ impl<RES: Resource> VaultOf<RES> {
     }
 }
 
-impl<RES: Resource> TryFrom<&[u8]> for VaultOf<RES> {
-    type Error = ParseVaultError;
-
-    fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
-        Ok(Vault::try_from(slice)?.into())
-    }
-}
+impl_TryFrom_Slice!(VaultOf<RES>, ParseVaultError);
 
 // VaultOf<RES>::From<Vault>
 #[cfg(feature = "runtime_typechecks")]
