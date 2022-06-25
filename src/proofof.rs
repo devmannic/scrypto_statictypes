@@ -37,8 +37,26 @@ impl<RES: Resource> WithInner<Proof> for ProofOf<RES> {
 }
 
 // "overrides" where in/out types are changed to Something<RES>
+// because we are not using Deref (since we're implementing Drop) that
+// means these potentially hide original methods with the same name, so 
+// use more generics so the original arguments types (without static RES)
+// can work all in the same function
 impl<RES: Resource> ProofOf<RES> {
-    /// Returns the resource definition of resources within the bucket.
+    /// Whether this proof includes an ownership proof of any of the given resource.
+    #[inline(always)]
+    pub fn contains<R: Resource, A: Into<ResourceOf<R>>>(&self, resource_address: A) -> bool {
+        let resource_of = resource_address.into();
+        self.with_inner(|inner| inner.contains(resource_of.unwrap()))
+    }
+
+    /// Whether this proof includes an ownership proof of at least the given amount of resource.
+    #[inline(always)]
+    pub fn contains_resource<R: Resource, A: Into<ResourceOf<R>>>(&self, amount: Decimal, resource_address: A) -> bool {
+        let resource_of = resource_address.into();
+        self.with_inner(|inner| inner.contains_resource(amount, resource_of.unwrap()))
+    }
+
+    /// Returns the resource manager for resources within the bucket.
     #[inline(always)]
     pub fn resource_manager(&self) -> ResourceOf<RES> {
         self.with_inner(|inner| inner.resource_address().unchecked_into())
@@ -110,11 +128,19 @@ impl<RES: Resource> Unwrap for ProofOf<RES> {
 
 // "forwarding" implementations because we can't implement Deref while using Drop
 impl<RES: Resource> ProofOf<RES> {
+    /* // shadowed by the implementations above.  In case we want to change names later to support both, leaving these here
     /// Whether this proof includes an ownership proof of any of the given resource.
     #[inline(always)]
-    pub fn contains(&self, resource: ResourceAddress) -> bool {
-        self.with_inner(|inner| inner.contains(resource))
+    pub fn contains(&self, resource_address: ResourceAddress) -> bool {
+        self.with_inner(|inner| inner.contains(resource_address))
     }
+
+    /// Whether this proof includes an ownership proof of at least the given amount of resource.
+    #[inline(always)]
+    pub fn contains_resource(&self, amount: Decimal, resource_address: ResourceAddress) -> bool {
+        self.with_inner(|inner| inner.contains(resource_address))
+    }
+    */
 
     /// Returns the resource amount within the bucket.
     #[inline(always)]
@@ -122,13 +148,13 @@ impl<RES: Resource> ProofOf<RES> {
         self.with_inner(|inner| inner.amount())
     }
 
-    /// Returns the resource definition address.
+    /// Returns the resource address.
     #[inline(always)]
     pub fn resource_address(&self) -> ResourceAddress {
         self.with_inner(|inner| inner.resource_address())
     }
 
-    /// Returns the keys of all non-fungibles in this bucket.
+    /// Returns the ids of all non-fungibles in this bucket.
     ///
     /// # Panics
     /// If the bucket is not a non-fungible bucket.
@@ -137,7 +163,25 @@ impl<RES: Resource> ProofOf<RES> {
         self.with_inner(|inner| inner.non_fungible_ids())
     }
 
-    /// Destroys this reference.
+    /// Returns all the non-fungible units contained.
+    ///
+    /// # Panics
+    /// Panics if this is not a non-fungible proof.
+    #[inline(always)]
+    pub fn non_fungibles<T: NonFungibleData>(&self) -> Vec<NonFungible<T>> {
+        self.with_inner(|inner| inner.non_fungibles())
+    }
+
+    /// Returns a singleton non-fungible.
+    ///
+    /// # Panics
+    /// Panics if this is not a singleton proof
+    #[inline(always)]
+    pub fn non_fungible<T: NonFungibleData>(&self) -> NonFungible<T> {
+        self.with_inner(|inner| inner.non_fungible())
+    }
+
+    /// Destroys this proof.
     #[inline(always)]
     pub fn drop(self) {
         self.unwrap().drop()
@@ -147,6 +191,14 @@ impl<RES: Resource> ProofOf<RES> {
     #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.with_inner(|inner| inner.is_empty())
+    }
+}
+
+impl<RES: Resource> TryFrom<&[u8]> for ProofOf<RES> {
+    type Error = ParseProofError;
+
+    fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
+        Ok(Proof::try_from(slice)?.into())
     }
 }
 

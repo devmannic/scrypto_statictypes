@@ -1,6 +1,7 @@
 use scrypto::prelude::*;
 
 use crate::bucketof::BucketOf;
+use crate::proofof::*;
 use crate::internal::*;
 use crate::resourceof::ResourceOf;
 
@@ -16,6 +17,7 @@ impl_HasResourceAddress!(Vault);
 #[cfg(feature = "runtime_typechecks")]
 impl<RES: runtimechecks::Resource> VaultOf<RES> {
     // runtime_checks requires trait bound on runtimechecks::Resource and use of .into() in new() may have runtime_checks (so we need a different impl block)
+    /// Creates an empty vault to permanently hold resource of the given definition.
     #[inline(always)]
     pub fn new(resource_address: ResourceAddress) -> Self {
         Vault::new(resource_address).into()
@@ -23,12 +25,14 @@ impl<RES: runtimechecks::Resource> VaultOf<RES> {
 }
 
 impl<RES: Resource> VaultOf<RES> {
+    /// Creates an empty vault to permanently hold resource of the given definition.
     #[cfg(not(feature = "runtime_typechecks"))]
     #[inline(always)]
     pub fn new(resource_address: ResourceAddress) -> Self {
         Vault::new(resource_address).into()
     }
 
+    /// Creates an empty vault and fills it with an initial bucket of resource.
     #[inline(always)]
     pub fn with_bucket(bucketof: BucketOf<RES>) -> VaultOf<RES> {
         Vault::with_bucket(bucketof.inner).unchecked_into()
@@ -64,15 +68,46 @@ impl<RES: Resource> VaultOf<RES> {
         self.inner.take_non_fungible(non_fungible_id).unchecked_into()
     }
 
+    /// Takes non-fungibles from this vault.
+    ///
+    /// # Panics
+    /// Panics if this is not a non-fungible vault or the specified non-fungible resource is not found.
+    #[inline(always)]
+    pub fn take_non_fungibles(&mut self, non_fungible_ids: &BTreeSet<NonFungibleId>) -> BucketOf<RES> {
+        self.inner.take_non_fungibles(non_fungible_ids).unchecked_into()
+    }
+
+    /// Creates an ownership proof of this vault.
+    #[inline(always)]
+    pub fn create_proof(&self) -> ProofOf<RES> {
+        // self.inner.create_proof().unchecked_into()
+        UncheckedIntoProofOf::unchecked_into(self.inner.create_proof())
+    }
+
+    /// Creates an ownership proof of this vault, by amount.
+    #[inline(always)]
+    pub fn create_proof_by_amount(&self, amount: Decimal) -> ProofOf<RES> {
+        UncheckedIntoProofOf::unchecked_into(self.inner.create_proof_by_amount(amount))
+    }
+
+    /// Creates an ownership proof of this vault, by non-fungible ID set.
+    #[inline(always)]
+    pub fn create_proof_by_ids(&self, ids: &BTreeSet<NonFungibleId>) -> ProofOf<RES> {
+        UncheckedIntoProofOf::unchecked_into(self.inner.create_proof_by_ids(ids))
+    }
+
     /// Returns the resource definition of resources within this vault.
     #[inline(always)]
     pub fn resource_manager(&self) -> ResourceOf<RES> {
         self.inner.resource_address().unchecked_into()
     }
+}
 
-    /// Uses resources in this vault as authorization for an operation.
-    pub fn authorize<F: FnOnce() -> O, O>(&self, f: F) -> O {
-        self.inner.authorize(f)
+impl<RES: Resource> TryFrom<&[u8]> for VaultOf<RES> {
+    type Error = ParseVaultError;
+
+    fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
+        Ok(Vault::try_from(slice)?.into())
     }
 }
 

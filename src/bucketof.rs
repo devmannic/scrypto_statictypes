@@ -46,6 +46,24 @@ impl<RES: Resource> BucketOf<RES> {
         self.inner.take(amount).unchecked_into()
     }
 
+    /// Takes a non-fungible from this bucket, by key.
+    ///
+    /// # Panics
+    /// Panics if this is not a non-fungible bucket or the specified non-fungible resource is not found.
+    #[inline(always)]
+    pub fn take_non_fungible(&mut self, non_fungible_id: &NonFungibleId) -> BucketOf<RES> {
+        self.inner.take_non_fungible(non_fungible_id).unchecked_into()
+    }
+
+    /// Takes non-fungibles from this bucket.
+    ///
+    /// # Panics
+    /// Panics if this is not a non-fungible bucket or the specified non-fungible resource is not found.
+    #[inline(always)]
+    pub fn take_non_fungibles(&mut self, non_fungible_ids: &BTreeSet<NonFungibleId>) -> BucketOf<RES> {
+        self.inner.take_non_fungibles(non_fungible_ids).unchecked_into()
+    }
+
     /// Burns resource within this bucket.
     #[inline(always)]
     pub fn burn(self) {
@@ -53,10 +71,11 @@ impl<RES: Resource> BucketOf<RES> {
         self.inner.burn();
     }
 
-    /// Returns the resource definition of resources in this bucket.
+    /// Creates an ownership proof of this bucket.
     #[inline(always)]
-    pub fn resource_address(&self) -> ResourceAddress {
-        self.inner.resource_address()
+    pub fn create_proof(&self) -> ProofOf<RES> {
+        // self.inner.create_proof().unchecked_into()
+        UncheckedIntoProofOf::unchecked_into(self.inner.create_proof())
     }
 
     /// Returns the resource definition of resources in this bucket.
@@ -64,27 +83,13 @@ impl<RES: Resource> BucketOf<RES> {
     pub fn resource_manager(&self) -> ResourceOf<RES> {
         self.inner.resource_address().unchecked_into()
     }
+}
 
-    /// Creates an immutable reference to this bucket.
-    #[inline(always)]
-    pub fn create_proof(&self) -> ProofOf<RES> {
-        // self.inner.create_proof().unchecked_into()
-        UncheckedIntoProofOf::unchecked_into(self.inner.create_proof())
-    }
+impl<RES: Resource> TryFrom<&[u8]> for BucketOf<RES> {
+    type Error = ParseBucketError;
 
-    /// Uses resources in this bucket as authorization for an operation.
-    #[inline(always)]
-    pub fn authorize<F: FnOnce(ProofOf<RES>) -> O, O>(&self, f: F) -> O {
-        f(self.create_proof())
-    }
-
-    /// Takes a non-fungible from this bucket, by key.
-    ///
-    /// # Panics
-    /// Panics if this is not a non-fungible bucket or the specified non-fungible resource is not found.
-    #[inline(always)]
-    pub fn take_non_fungible(&mut self, key: &NonFungibleId) -> BucketOf<RES> {
-        self.inner.take_non_fungible(key).unchecked_into()
+    fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
+        Ok(Bucket::try_from(slice)?.into())
     }
 }
 
