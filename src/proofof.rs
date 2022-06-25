@@ -12,8 +12,10 @@ use crate::runtime::runtimechecks;
 // impl_wrapper_struct!(ProofOf<RES>, Proof); // can't use this with Drop, so instead custom implementation below
 impl_wrapper_common!(ProofOf<RES>, Proof); // still want the common implementation
 
-// custom ProofOf using RefCell so we can implement Drop
-#[derive(Debug)]
+/// A custom ProofOf using RefCell so we can implement Drop
+///
+/// Note: May want to reconsider this implementation if Proof's need to be Hash-able once they can be stored
+#[derive(Debug, PartialEq, Eq)] // Bucket, Proof, Vault are inconsistent, deriving superset, but without Hash since we cannot derive that for the RefCell
 pub struct ProofOf<RES: Resource> {
     inner: RefCell<Option<Proof>>,
     phantom: PhantomData<RES>,
@@ -91,12 +93,12 @@ impl<RES: Resource> From<Proof> for ProofOf<RES> {
     }
 }
 
-// custom Drop to call .drop() the inner Proof -- which is for Radix Engine and different from drop(Proof)
+// custom Drop to call .drop() the inner Proof -- which is for Radix Engine and different from drop(proof)
 impl<RES: Resource> Drop for ProofOf<RES> {
     fn drop(&mut self) {
         let opt = self.inner.borrow_mut().take();
         opt.and_then(|proof| {
-            debug!("Drop ProofOf {:?}", proof);
+            //debug!("Drop ProofOf {:?}", proof);
             Some(proof.drop())
         });
     }
