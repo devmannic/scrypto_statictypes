@@ -49,6 +49,15 @@ impl<RES: Resource> std::ops::Deref for ResourceOf<RES> {
     }
 }
 
+// because of the custom deref we need a specific WithInner implementation too
+impl<RES: Resource> WithInner<ResourceAddress> for ResourceOf<RES> {
+    type Inner = ResourceAddress;
+    #[inline(always)]
+    fn with_inner<F: FnOnce(&ResourceAddress) -> O, O>(&self, f: F) -> O {
+        f(&self.inner)
+    }
+}
+
 #[cfg(feature = "runtime_typechecks")]
 impl<RES: runtimechecks::Resource> From<ResourceAddress> for ResourceOf<RES> {
     fn from(resource_address: ResourceAddress) -> Self {
