@@ -60,29 +60,18 @@ impl<RES: runtimechecks::Resource> From<ResourceAddress> for ResourceOf<RES> {
     }
 }
 
-/*
-//  XXX no longer possible in v0.4.0 because ResourceAddress managed by ResourceManager is pub(crate) only
+// Implement == and != between ResourceAddress and ResourceOf
 
-// Implement == and != between ResourceManager and ResourceOf
-
-impl<RES: Resource> PartialEq<ResourceOf<RES>> for ResourceManager {
+impl<RES: Resource> PartialEq<ResourceOf<RES>> for ResourceAddress {
     #[inline(always)]
     fn eq(&self, other: &ResourceOf<RES>) -> bool {
-        self.address() == other.address()
+        self == &other._resource_address()
     }
 }
 
-impl<RES: Resource> PartialEq<ResourceManager> for ResourceOf<RES> {
+impl<RES: Resource> PartialEq<ResourceAddress> for ResourceOf<RES> {
     #[inline(always)]
-    fn eq(&self, other: &ResourceManager) -> bool {
-        self.address() == other.address()
+    fn eq(&self, other: &ResourceAddress) -> bool {
+        &self._resource_address() == other
     }
 }
-
-impl<RES: Resource> PartialEq<ResourceOf<RES>> for ResourceOf<RES> {
-    #[inline(always)]
-    fn eq(&self, other: &ResourceOf<RES>) -> bool {
-        self.address() == other.address()
-    }
-}
-*/
