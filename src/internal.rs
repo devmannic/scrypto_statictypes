@@ -135,7 +135,7 @@ pub trait Unwrap {
 }
 
 macro_rules! impl_wrapper_struct {
-    ( $w:ident<RES>, $t:ty ) => {
+    ( $w:ident<RES>, $t:ty, noderef ) => {
         #[derive(Debug, PartialEq, Eq, Hash)] // Bucket, Proof, Vault are inconsistent, deriving superset (and Proof doesn't use this macro)
         pub struct $w<RES> {
             pub(crate) inner: $t,
@@ -158,6 +158,26 @@ macro_rules! impl_wrapper_struct {
                 }
             }
         }
+        #[cfg(not(feature = "runtime_typechecks"))]
+        impl<RES: Resource> From<$t> for $w<RES> {
+            #[inline(always)]
+            fn from(inner: $t) -> Self {
+                inner.unchecked_into()
+            }
+        }
+
+        impl_wrapper_common!($w<RES>, $t);
+    };
+    ( $w:ident<RES>, $t:ty) => {
+        impl_wrapper_struct!($w<RES>, $t, noderef);
+        impl_wrapper_deref!($w<RES>, $t);
+    };
+}
+pub(crate) use impl_wrapper_struct; // export for use within crate
+
+// seperate out deref
+macro_rules! impl_wrapper_deref {
+    ( $w:ident<RES>, $t:ty ) => {
         impl<RES: Resource> std::ops::Deref for $w<RES> {
             type Target = $t;
 
@@ -173,19 +193,9 @@ macro_rules! impl_wrapper_struct {
                 &mut self.inner
             }
         }
-
-        #[cfg(not(feature = "runtime_typechecks"))]
-        impl<RES: Resource> From<$t> for $w<RES> {
-            #[inline(always)]
-            fn from(inner: $t) -> Self {
-                inner.unchecked_into()
-            }
-        }
-
-        impl_wrapper_common!($w<RES>, $t);
     };
 }
-pub(crate) use impl_wrapper_struct; // export for use within crate
+pub(crate) use impl_wrapper_deref; // export for use within crate
 
 // common implementations that only depend on traits of $t or $w
 // and are not expected to need custom implementations (like From<$t> for $w<RES> when not(feature = "runtime_typechecks"))

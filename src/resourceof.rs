@@ -6,7 +6,7 @@ use crate::internal::*;
 #[cfg(feature = "runtime_typechecks")]
 use crate::runtime::runtimechecks;
 
-impl_wrapper_struct!(ResourceOf<RES>, ResourceAddress);
+impl_wrapper_struct!(ResourceOf<RES>, ResourceAddress, noderef); // use custom deref to borrowed ResourceManager instead of default
 impl_SBOR_traits!(ResourceOf<RES>, ResourceAddress);
 impl SBORable for ResourceAddress {}
 impl Container for ResourceAddress {}
@@ -36,6 +36,16 @@ impl<RES: Resource> ResourceOf<RES> {
     #[inline(always)]
     pub fn burn(&self, bucket: BucketOf<RES>) {
         self.borrow_resource_manager().burn(bucket.inner)
+    }
+}
+
+// custom impl Deref to borrowed ResourceManager
+impl<RES: Resource> std::ops::Deref for ResourceOf<RES> {
+    type Target = ResourceManager;
+
+    #[inline(always)]
+    fn deref(&self) -> &Self::Target {
+        self.borrow_resource_manager()
     }
 }
 
