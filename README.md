@@ -180,6 +180,7 @@ Scrypto Static Types is suitable for general usage, but not yet at 1.0. We maint
 
 Latest Scrypto Static Types versions for Scrypto versions are:
 
+- Version 0.5.0 depending on Scrypto version 0.4.1
 - Version 0.4.1 depending on Scrypto version 0.3.0
 - Version 0.3.1 depending on Alexandria Scrypto version 0.2.0
 - Version 0.1.1 depending on Pre-Alexandria Scrypto version 0.1.1
