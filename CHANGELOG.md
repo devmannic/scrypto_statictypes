@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Compatibility: API now matches Scrypto v0.4.0 (builds against v0.4.1)
   - Note: ResourceOf<> now takes the place of a ResourceAddress since ResourceDef no longer exists
+- MSRV: 1.56.0 -> 1.60.0
 
 ## [0.4.1] - 2022-02-20
 ### Fixed

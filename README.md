@@ -210,7 +210,7 @@ issue tracker with the keyword `yank` *should* uncover the motivation.
 
 ### Rust version requirements
 
-Since version 0.1, Scrypto Static Types requires **Rustc version 1.56 (2021 edition) or greater**.
+Since version 0.5, Scrypto Static Types requires **Rustc version 1.60 (2021 edition) or greater**.
 
 Continuous Integration (CI) will always test the minimum supported Rustc version
 (the MSRV). The current policy is that this can be updated in any

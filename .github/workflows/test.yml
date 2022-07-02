@@ -18,10 +18,10 @@ jobs:
             toolchain: stable
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            toolchain: 1.56.0 # MSRV (default features)
+            toolchain: 1.60.0 # MSRV (default features)
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            toolchain: 1.56.0 # MSRV (all features)
+            toolchain: 1.60.0 # MSRV (all features)
           ## no nightly support since upstream deps are broken
           #- os: ubuntu-latest
           #  target: x86_64-unknown-linux-gnu
@@ -56,14 +56,14 @@ jobs:
         run: |
           cargo test --release --all-features
       - name: Test scrypto_statictypes (default features, MSRV)
-        if: ${{ matrix.toolchain == '1.56.0' }}
+        if: ${{ matrix.toolchain == '1.60.0' }}
         run: |
           cargo test --release
       - name: Test scrypto_statictypes (all features, MSRV)
-        if: ${{ matrix.toolchain == '1.56.0' }}
+        if: ${{ matrix.toolchain == '1.60.0' }}
         run: |
           cargo test --release --all-features
       - name: Test examples
         run: |
-          cargo install --git https://github.com/radixdlt/radixdlt-scrypto --tag v0.3.0 simulator
+          cargo install --git https://github.com/radixdlt/radixdlt-scrypto --tag v0.4.1 simulator
           ./utils/test_examples.sh
