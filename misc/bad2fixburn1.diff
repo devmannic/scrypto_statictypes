@@ -1,70 +1,15 @@
-diff --git a/./examples/badburn1/Cargo.lock b/./examples/fixburn1/Cargo.lock
-index c8082a3..00fd0b0 100644
---- a/./examples/badburn1/Cargo.lock
-+++ b/./examples/fixburn1/Cargo.lock
-@@ -30,16 +30,6 @@ version = "1.0.1"
- source = "registry+https://github.com/rust-lang/crates.io-index"
- checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
- 
--[[package]]
--name = "badburn1"
--version = "0.2.0"
--dependencies = [
-- "radix-engine",
-- "sbor",
-- "scrypto",
-- "scrypto_statictypes",
--]
--
- [[package]]
- name = "bencher"
- version = "0.1.5"
-@@ -96,6 +86,16 @@ version = "1.2.0"
- source = "registry+https://github.com/rust-lang/crates.io-index"
- checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
- 
-+[[package]]
-+name = "fixburn1"
-+version = "0.2.0"
-+dependencies = [
-+ "radix-engine",
-+ "sbor",
-+ "scrypto",
-+ "scrypto_statictypes",
-+]
-+
- [[package]]
- name = "generic-array"
- version = "0.14.4"
-diff --git a/./examples/badburn1/Cargo.toml b/./examples/fixburn1/Cargo.toml
-index 6726a4b..89feeda 100644
---- a/./examples/badburn1/Cargo.toml
-+++ b/./examples/fixburn1/Cargo.toml
-@@ -1,5 +1,5 @@
- [package]
--name = "badburn1"
-+name = "fixburn1"
- version = "0.2.0"
- edition = "2021"
- 
-@@ -21,4 +21,7 @@ panic = 'abort'     # Abort on panic.
- crate-type = ["cdylib", "lib"]
- name = "out"
- 
-+[features]
-+default = ["scrypto_statictypes/runtime_typechecks"]
-+
- [workspace]
 diff --git a/./examples/badburn1/src/lib.rs b/./examples/fixburn1/src/lib.rs
-index 634db1e..527668f 100644
+index 7c87e69..f9fe0f4 100644
 --- a/./examples/badburn1/src/lib.rs
 +++ b/./examples/fixburn1/src/lib.rs
-@@ -1,40 +1,47 @@
+@@ -1,45 +1,53 @@
  use scrypto::prelude::*;
 +use scrypto_statictypes::prelude::*;
 +
 +declare_resource!(FLAM);
 +declare_resource!(INFLAM);
++declare_resource!(AUTH);
++declare_resource!(MINTER);
  
  blueprint! {
 -    struct BadBurn {
@@ -72,40 +17,46 @@ index 634db1e..527668f 100644
          // Define what resources and data will be managed by Hello components
 -        flam_vault: Vault,
 -        inflam_vault: Vault,
+-        auth_def: ResourceAddress,
+-        minter: Vault,
 +        flam_vault: VaultOf<FLAM>,
 +        inflam_vault: VaultOf<INFLAM>,
-         auth_def: ResourceDef,
-         minter: Vault,
++        auth_def: ResourceOf<AUTH>,
++        minter: VaultOf<MINTER>,
      }
  
 -    impl BadBurn {
--        pub fn new() -> (Component, Bucket, Bucket) {
+-        pub fn new() -> (ComponentAddress, Bucket, Bucket) {
 +    impl FixBurn {
-+        pub fn new() -> (Component, Bucket, BucketOf<FLAM>) {
++        pub fn new() -> (ComponentAddress, Bucket, BucketOf<FLAM>) {
              // create one owner badge for auth for the burn_it functino
-             let minter = ResourceBuilder::new_fungible(DIVISIBILITY_NONE).initial_supply_fungible(1);
-             // create 1 minter badge for 2 resources, FLAM and INFLAM
-             let owner = ResourceBuilder::new_fungible(DIVISIBILITY_NONE).initial_supply_fungible(1);
+             let owner = ResourceBuilder::new_fungible().divisibility(DIVISIBILITY_NONE).initial_supply(1);
+ 
+-            // create 1 minter badge for 2 resources, FLAM and INFLAM
+-            let minter = ResourceBuilder::new_fungible().divisibility(DIVISIBILITY_NONE).initial_supply(1);
++            // create 1 minter badge type for 2 resources, FLAM and INFLAM, but quanity 2 to test the take_all_inflam method
++            let minter = ResourceBuilder::new_fungible().divisibility(DIVISIBILITY_NONE).initial_supply(2);
+ 
              // create FLAM and mint 1000
--            let flammable_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
-+            let flammable_bucket: BucketOf<FLAM> = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
+-            let mut flammable_bucket = ResourceBuilder::new_fungible()
++            let mut flammable_bucket: BucketOf<FLAM> = ResourceBuilder::new_fungible()
                  .metadata("name", "BurnMe")
                  .metadata("symbol", "FLAM")
-                 .flags(MINTABLE | BURNABLE)
-                 .badge(minter.resource_address(), MAY_MINT | MAY_BURN)
--                .initial_supply_fungible(1000);
-+                .initial_supply_fungible(1000)
+                 .mintable(rule!(require(minter.resource_address())), LOCKED)
+                 .burnable(rule!(require(minter.resource_address())), LOCKED)
+-                .initial_supply(1000);
++                .initial_supply(1000)
 +                .into();
-+
+ 
              // create INFLAM and mint 1000
-             let inflammable_bucket = ResourceBuilder::new_fungible(DIVISIBILITY_MAXIMUM)
+             let inflammable_bucket = ResourceBuilder::new_fungible()
                  .metadata("name", "KeepMe")
                  .metadata("symbol", "INFLAM")
--                .flags(MINTABLE | BURNABLE)
-+                .flags(MINTABLE | BURNABLE) // this specific accidental burn bug could ALSO be fixed my removing the BURNABLE flag, but that doesn't fix this entire class of bug
-                 .badge(minter.resource_address(), MAY_MINT | MAY_BURN)
--                .initial_supply_fungible(1000);
-+                .initial_supply_fungible(1000)
+                 .mintable(rule!(require(minter.resource_address())), LOCKED)
+-                .burnable(rule!(require(minter.resource_address())), LOCKED)
+-                .initial_supply(1000);
++                .burnable(rule!(require(minter.resource_address())), LOCKED) // this specific accidental burn bug could ALSO be fixed my limiting the burnable authorities, but that doesn't fix this entire class of bug
++                .initial_supply(1000)
 +                .into();
  
              // setup component storage
@@ -114,45 +65,42 @@ index 634db1e..527668f 100644
              let c = Self {
                  flam_vault: flam_vault,
 -                inflam_vault: Vault::with_bucket(inflammable_bucket), // all 1000 INFLAM stay here
+-                auth_def: owner.resource_address(), // save this so we can authorize calling burn_it()
+-                minter: Vault::with_bucket(minter), // keep this so we can burn)
 +                inflam_vault: VaultOf::with_bucket(inflammable_bucket), // all 1000 INFLAM stay here
-                 auth_def: owner.resource_def(), // save this so we can use #[auth(auth_def)]
-                 minter: Vault::with_bucket(minter), // keep this so we can burn)
++                auth_def: owner.resource_address().into(), // save this so we can authorize calling burn_it()
++                minter: Vault::with_bucket(minter).into(), // keep this so we can burn)
              }
-@@ -43,7 +50,7 @@ blueprint! {
+             .instantiate()
+             .add_access_check(
+@@ -51,7 +59,7 @@ blueprint! {
+             (c, owner, flammable_bucket)
          }
  
-         #[auth(auth_def)]
--        pub fn burn_it(&mut self, incoming: Bucket) -> Bucket {
-+        pub fn burn_it(&mut self, incoming: BucketOf<FLAM>) -> BucketOf<INFLAM> {
+-        pub fn burn_it(&mut self, mut incoming: Bucket) -> Bucket {
++        pub fn burn_it(&mut self, mut incoming: BucketOf<FLAM>) -> BucketOf<INFLAM> {
              // burn all but 5, give back same amount of inflam
-             if incoming.amount() > 5.into() {
-                 self.flam_vault.put(incoming.take(5));
-diff --git a/./examples/badburn1/tests/lib.rs b/./examples/fixburn1/tests/lib.rs
-index bf77462..f139942 100644
---- a/./examples/badburn1/tests/lib.rs
-+++ b/./examples/fixburn1/tests/lib.rs
-@@ -13,7 +13,7 @@ fn test_burn_it() {
- 
-     // Test the `new` function.
-     let transaction = TransactionBuilder::new(&executor)
--        .call_function(package, "BadBurn", "new", vec![], None)
-+        .call_function(package, "FixBurn", "new", vec![], None)
-         .drop_all_bucket_refs()
-         .deposit_all_buckets(account) // needed when returning a bucket
-         .build(vec![key])
-@@ -80,7 +80,7 @@ fn test_burn_it() {
-     assert!(!receipt.success);
- 
-     // Test the `burn_it` method < 5 of the WRONG TYPE (use INFLAM)
--    // it will succeed (oops)
-+    // it will also fail (now that we use scrypto_statictypes with the runtime_typechecks enabled !!!)
-     let transaction = TransactionBuilder::new(&executor)
-         .call_method(
-             component_addr,
-@@ -97,5 +97,5 @@ fn test_burn_it() {
-         .unwrap();
-     let receipt = executor.run(transaction, true).unwrap();
-     println!("{:?}\n", receipt);
--    assert!(receipt.success);
-+    assert!(!receipt.success);
- }
+             if incoming.amount() > dec!(5) {
+                 self.flam_vault.put(incoming.take(dec!(5)));
+@@ -60,5 +68,19 @@ blueprint! {
+             self.minter.authorize(|| incoming.burn());
+             result
+         }
++
++        // auth works the same way here, as long as the runtime type checks feature is enabled. auth will drop without needing the macro
++        pub fn take_all_inflam(&mut self, auth: ProofOf<AUTH>) -> BucketOf<INFLAM> {
++            assert_eq!(auth.amount(), dec!(2)); // need 2 badges to take everything
++            self.inflam_vault.take_all()
++        }
++
++        // alternately, if runtime checks are not enabled, it will fail to compile ProofOf<AUTH> as an argument since it purposefully does not allow Decode
++        // and if used with .into() (as shown below) it will always panic since it cannot be be checked
++        pub fn take_all_inflam_static(&mut self, auth: Proof) -> BucketOf<INFLAM> {
++            let auth: ProofOf<AUTH> = auth.into(); // compiles, but panics
++            assert_eq!(auth.amount(), dec!(2)); // need 2 badges to take everything
++            self.inflam_vault.take_all()
++        }
+     }
+-}
++}
+\ No newline at end of file

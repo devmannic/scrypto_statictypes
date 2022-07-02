@@ -1,14 +1,34 @@
 use std::ops::Deref;
 
-pub use scrypto::prelude::Address;
+pub use scrypto::prelude::{ResourceAddress, ResourceManager};
 
 pub trait Resource: std::fmt::Debug {} // supertrait to ensure the correct traits propate to all of the templates
 
 pub trait ResourceDecl: Resource {
-    const ADDRESS: Option<Address>;
+    const ADDRESS: Option<ResourceAddress>;
 }
 
 pub trait Container: SBORable {}
+
+pub trait HasResourceAddress {
+    fn _resource_address(&self) -> ResourceAddress;
+    fn borrow_resource_manager(&self) -> &ResourceManager {
+        use scrypto::prelude::*; // make sure the macro works
+        borrow_resource_manager!(HasResourceAddress::_resource_address(self))
+    }
+}
+
+macro_rules! impl_HasResourceAddress {
+    ( $w:ty ) => {
+        impl HasResourceAddress for $w {
+            #[inline(always)]
+            fn _resource_address(&self) -> ResourceAddress {
+                self.resource_address()
+            }
+        }
+    }
+}
+pub(crate) use impl_HasResourceAddress; // export for use within crate
 
 //=====
 // SBOR
@@ -51,10 +71,12 @@ pub trait SBORable: TypeId + Encode + Decode + Describe {
 
 // abstract how the inner value is retrieved for use in encode_value (or elsewhere)
 pub trait WithInner<T> {
+    type Inner;
     fn with_inner<F: FnOnce(&T) -> O, O>(&self, f: F) -> O;
 }
 // for anything that supports Deref, just use that (but only implement on our Containers)
 impl<T: Container, W: Deref<Target = T>> WithInner<T> for W {
+    type Inner = T;
     #[inline(always)]
     fn with_inner<F: FnOnce(&T) -> O, O>(&self, f: F) -> O {
         f(self)
@@ -113,8 +135,8 @@ pub trait Unwrap {
 }
 
 macro_rules! impl_wrapper_struct {
-    ( $w:ident<RES>, $t:ty ) => {
-        #[derive(Debug)] // i think this derive is ok since it SHOULD depend on what "C" really is, so not try to derive Clone if C is not Clone, similarly with PartialEq and Eq
+    ( $w:ident<RES>, $t:ty, noderef ) => {
+        #[derive(Debug, PartialEq, Eq, Hash)] // Bucket, Proof, Vault are inconsistent, deriving superset (and Proof doesn't use this macro)
         pub struct $w<RES> {
             pub(crate) inner: $t,
             pub(crate) phantom: std::marker::PhantomData<RES>,
@@ -136,6 +158,26 @@ macro_rules! impl_wrapper_struct {
                 }
             }
         }
+        #[cfg(not(feature = "runtime_typechecks"))]
+        impl<RES: Resource> From<$t> for $w<RES> {
+            #[inline(always)]
+            fn from(inner: $t) -> Self {
+                inner.unchecked_into()
+            }
+        }
+
+        impl_wrapper_common!($w<RES>, $t);
+    };
+    ( $w:ident<RES>, $t:ty) => {
+        impl_wrapper_struct!($w<RES>, $t, noderef);
+        impl_wrapper_deref!($w<RES>, $t);
+    };
+}
+pub(crate) use impl_wrapper_struct; // export for use within crate
+
+// seperate out deref
+macro_rules! impl_wrapper_deref {
+    ( $w:ident<RES>, $t:ty ) => {
         impl<RES: Resource> std::ops::Deref for $w<RES> {
             type Target = $t;
 
@@ -151,19 +193,9 @@ macro_rules! impl_wrapper_struct {
                 &mut self.inner
             }
         }
-
-        #[cfg(not(feature = "runtime_typechecks"))]
-        impl<RES: Resource> From<$t> for $w<RES> {
-            #[inline(always)]
-            fn from(inner: $t) -> Self {
-                inner.unchecked_into()
-            }
-        }
-
-        impl_wrapper_common!($w<RES>, $t);
     };
 }
-pub(crate) use impl_wrapper_struct; // export for use within crate
+pub(crate) use impl_wrapper_deref; // export for use within crate
 
 // common implementations that only depend on traits of $t or $w
 // and are not expected to need custom implementations (like From<$t> for $w<RES> when not(feature = "runtime_typechecks"))
@@ -213,7 +245,7 @@ macro_rules! impl_SBOR_Decode {
             #[inline(always)]
             fn decode_value(decoder: &mut sbor::Decoder) -> Result<Self, sbor::DecodeError> {
                 let r = <$t as sbor::Decode>::decode_value(decoder);
-                r.map(|inner| inner.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `T`'s ResourceDef (Address) with this type "RES"
+                r.map(|inner| inner.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `T`'s ResourceManager (Address) with this type "RES"
             }
         }
 
@@ -224,10 +256,35 @@ macro_rules! impl_SBOR_Decode {
             #[inline(always)]
             fn decode_value(decoder: &mut sbor::Decoder) -> Result<Self, sbor::DecodeError> {
                 let r = <$t as sbor::Decode>::decode_value(decoder);
-                r.map(|inner| inner.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `T`'s ResourceDef (Address) with this type "RES"
+                r.map(|inner| inner.into()) // the .into() saves duplicate code and ensures optional runtime type checks bind the decoded `T`'s ResourceManager (Address) with this type "RES"
             }
         }
     };
 }
 
 pub(crate) use impl_SBOR_Decode; // export for use within crate
+
+macro_rules! impl_TryFrom_Slice {
+    ( $w:ty, $e:ident ) => {
+        // runtime_checks requires trait bound on runtimechecks::Resource and use of .into() may have runtime_checks (so we need a different impl block)
+        #[cfg(feature = "runtime_typechecks")]
+        impl<RES: runtimechecks::Resource> TryFrom<&[u8]> for $w {
+            type Error = $e;
+
+            fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
+                Ok(<$w as WithInner<_>>::Inner::try_from(slice)?.into())
+            }
+        }
+
+        #[cfg(not(feature = "runtime_typechecks"))]
+        impl<RES: Resource> TryFrom<&[u8]> for $w {
+            type Error = $e;
+
+            fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
+                Ok(<$w as WithInner<_>>::Inner::try_from(slice)?.into())
+            }
+        }
+    };
+}
+
+pub(crate) use impl_TryFrom_Slice; // export for use within crate

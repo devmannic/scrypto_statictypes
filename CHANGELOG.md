@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.5.0] - 2022-07-02
+### Added
+- `resource_manager()` methods for type-safe version of `borrow_resource_manager!(...resource_address())`
+- `mint()`, `mint_non_fungible()` and `burn()` methods can be called directly on a `ResourceOf` with typed inputs/outputs
+### Changed
+- Compatibility: API now matches Scrypto v0.4.0 (builds against v0.4.1)
+  - Note: ResourceOf<> now takes the place of a ResourceAddress since ResourceDef no longer exists
+- MSRV: 1.56.0 -> 1.60.0
+
 ## [0.4.1] - 2022-02-20
 ### Fixed
 - Update non-runtime-checks variant of  example/fixburn1

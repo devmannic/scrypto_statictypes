@@ -3,7 +3,7 @@ use crate::bucketof::*;
 use crate::internal::*;
 use crate::resourceof::*;
 use scrypto::prelude::{
-    call_method, scrypto_decode, scrypto_encode, scrypto_unwrap, Bucket, Decimal, ResourceDef,
+    Runtime, scrypto_decode, scrypto_encode, Bucket, Decimal, ComponentAddress
 };
 
 #[cfg(feature = "runtime_typechecks")]
@@ -15,10 +15,10 @@ impl<RES: Resource> ResourceIs<RES> for RES {}
 
 /// Proxy for an Account taking the place of the removed scrypto::core::Account API
 struct Account {
-    component: Address,
+    component: ComponentAddress,
 }
 impl Account {
-    fn address(&self) -> Address {
+    fn address(&self) -> ComponentAddress {
         self.component
     }
 }
@@ -36,8 +36,8 @@ impl Deposit for Account {
         // Account API removed in Scrypto v0.3.0, use this
         // dynamic implementation instead
         let args = vec![scrypto_encode(&bucket)];
-        let rtn = call_method(self.address(), "deposit", args);
-        scrypto_unwrap(scrypto_decode(&rtn))
+        let rtn = Runtime::call_method(self.address(), "deposit", args);
+        scrypto_decode(&rtn).unwrap()
     }
 }
 
@@ -67,18 +67,18 @@ where Self: Deposit
 //
 
 pub trait Withdraw {
-    fn withdraw<A: Into<ResourceDef>>(&self, amount: Decimal, resource_def: A) -> Bucket;
+    fn withdraw<A: Into<ResourceAddress>>(&self, amount: Decimal, resource_address: A) -> Bucket;
 }
 impl Withdraw for Account {
-    // #[inline(always)] // put this back if the bug is fixed
-    fn withdraw<A: Into<ResourceDef>>(&self, amount: Decimal, resource_def: A) -> Bucket {
-        // Account::withdraw(self, amount, resource_def) // BUG in Scrypto implementation missing return Bucket?  Reimplement here for now -- https://github.com/radixdlt/radixdlt-scrypto/issues/107
+    #[inline(always)]
+    fn withdraw<A: Into<ResourceAddress>>(&self, amount: Decimal, resource_address: A) -> Bucket {
+        //Account::withdraw(self, amount, resource_address)
         let args = vec![
             scrypto_encode(&amount),
-            scrypto_encode(&resource_def.into()),
+            scrypto_encode(&resource_address.into()),
         ];
-        let rtn = call_method(self.address(), "withdraw", args);
-        scrypto_unwrap(scrypto_decode(&rtn))
+        let rtn = Runtime::call_method(self.address(), "withdraw", args);
+        scrypto_decode(&rtn).unwrap()
     }
 }
 
