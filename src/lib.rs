@@ -7,7 +7,7 @@
 //! - Safe drop in replacements coexist with existing types.  Gradually apply these only where you need them:
 //!   - `Bucket` --> `BucketOf<MYTOKEN>`
 //!   - `Vault` --> `VaultOf<MYTOKEN>`
-//!   - `ResourceManager` --> `ResourceOf<MYTOKEN>`
+//!   - `ResourceAddress` --> `ResourceOf<MYTOKEN>`
 //!   - `Proof` --> `ProofOf<MYTOKEN>`
 //! - Conveniently defined `XRD` Resource to use with `VaultOf<XRD>`, and friends.
 //! - Simple macro to declare new resources: `declare_resource!(MYTOKEN)`
