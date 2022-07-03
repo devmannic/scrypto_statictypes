@@ -5,7 +5,7 @@
 [![Crate](https://img.shields.io/badge/crates.io-on%20hold-orange)](https://crates.io/crates/scrypto_statictypes)
 [![API](https://img.shields.io/badge/api-master-green.svg)](https://devmannic.github.io/scrypto_statictypes)
 [![Scrypto version](https://img.shields.io/badge/scrypto-0.4.1-darkgreen.svg)](https://github.com/radixdlt/radixdlt-scrypto/releases/tag/v0.4.1)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.56+-darkgreen.svg)](https://github.com/devmannic/scrypto_statictypes#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.60+-darkgreen.svg)](https://github.com/devmannic/scrypto_statictypes#rust-version-requirements)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)](https://github.com/devmannic/scrypto_statictypes#license)
 
 Use explicit container types with Scrypto!  Leverage the Rust compiler's type checking to increase security and productivity when developing Radix blueprints.
